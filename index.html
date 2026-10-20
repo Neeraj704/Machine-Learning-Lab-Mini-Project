@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Timeframe Bitcoin Price Forecasting — ML Lab Project</title>
+  <meta name="description"
+    content="End-to-end machine learning pipeline for BTC/USDT price prediction, directional classification, and algorithmic backtesting across 13 trading timeframes using Ridge Regression, Random Forest, and LightGBM.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ════════════════════════════════════════════
+     NAVBAR
+     ════════════════════════════════════════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-inner">
+      <a href="#hero" class="navbar-brand">
+        <span class="logo-icon">₿</span>
+        <span>BTC Forecaster</span>
+      </a>
+      <ul class="navbar-links" id="navLinks">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#pipeline">Pipeline</a></li>
+        <li><a href="#data">Data</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#models">Models</a></li>
+        <li><a href="#evaluation">Evaluation</a></li>
+        <li><a href="#backtest">Backtest</a></li>
+        <li><a href="#equity">Equity</a></li>
+        <li><a href="#trades">Trades</a></li>
+        <li><a href="#forecasts">Forecasts</a></li>
+        <li><a href="#insights">Insights</a></li>
+        <li><a href="notebooks.html" class="nav-notebooks-tab">🔬 Lab Notebooks Hub</a></li>
+        <li><a href="ML_LAB_PROJECT_BTC_FORECASTING.pdf" target="_blank"
+            style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 4px 12px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">📄
+            Lab Report PDF</a></li>
+      </ul>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 1: HERO
+     ════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>uh ?
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div
+        style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 30px; padding: 6px 16px; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-secondary); backdrop-filter: blur(8px);">
+        <span style="color: var(--accent-cyan); font-weight: 700;">🏛 Manipal University Jaipur</span>
+        <span style="opacity: 0.4;">|</span>
+        <span>By <strong>Neeraj</strong> (2427010033), <strong>Adhya Jain</strong> (2427010014) &amp; <strong>Tanish
+            Jain</strong> (2427010215) • <strong>B.Tech CSE (AI &amp; ML)</strong></span>
+      </div>
+      <h1>Multi-Timeframe <span class="text-gradient">Bitcoin Price</span> Forecasting</h1>
+      <p class="subtitle">Machine Learning Lab Project — BTC/USDT prediction, trend classification &amp; algorithmic
+        backtesting across <strong>13 distinct trading timeframes</strong></p>
+      <div class="hero-stats">
+        <div class="stat-card fade-in">
+          <span class="stat-value">13</span>
+          <span class="stat-label">Timeframes</span>
+        </div>
+        <div class="stat-card fade-in fade-in-delay-1">
+          <span class="stat-value">3</span>
+          <span class="stat-label">ML Models</span>
+        </div>
+        <div class="stat-card fade-in fade-in-delay-2">
+          <span class="stat-value">22</span>
+          <span class="stat-label">Features</span>
+        </div>
+        <div class="stat-card fade-in fade-in-delay-3">
+          <span class="stat-value mono">$10K</span>
+          <span class="stat-label">Initial Capital</span>
+        </div>
+        <div class="stat-card fade-in fade-in-delay-4">
+          <span class="stat-value" id="totalTradesHero">—</span>
+          <span class="stat-label">Trades Logged</span>
+        </div>
+      </div>
+      <div class="hero-cta-group fade-in fade-in-delay-4">
+        <a href="#evaluation" class="btn-primary">📊 View Model Results &amp; Charts</a>
+        <a href="notebooks.html" class="btn-secondary">🔬 Open Lab Notebooks Deep Dive (All 6)</a>
+        <a href="ML_LAB_PROJECT_BTC_FORECASTING.pdf" target="_blank" class="btn-secondary"
+          style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">📄 Download
+          Lab Report (PDF)</a>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <span>Scroll to explore</span>
+      <div class="arrow"></div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 2: PROJECT OVERVIEW
+     ════════════════════════════════════════════ -->
+  <section id="overview">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Project Overview</span>
+        <h2>The Idea &amp; Approach</h2>
+        <p>An end-to-end ML pipeline that predicts Bitcoin's next-candle price, classifies directional trends, and
+          simulates algorithmic trading with real transaction costs.</p>
+      </div>
+
+      <div class="split-layout">
+        <div class="fade-in">
+          <h3 style="margin-bottom: 16px;">Why This Project?</h3>
+          <p style="margin-bottom: 16px;">Cryptocurrency markets present a uniquely challenging prediction problem:
+            <strong style="color: var(--text-primary)">high volatility, 24/7 trading, micro-structure noise, and
+              fat-tailed return distributions</strong> that violate Gaussian assumptions. This project systematically
+            benchmarks how three fundamentally different ML paradigms handle this challenge across timescales from
+            1-minute scalping to 30-day macro positioning.</p>
+
+          <div class="callout" style="margin-bottom: 20px;">
+            <p><strong>Core Hypothesis:</strong> The predictive utility of machine learning models varies significantly
+              across timeframes — higher timeframes should yield better directional accuracy and profitability due to
+              reduced noise and lower transaction cost friction relative to signal magnitude.</p>
+          </div>
+
+          <h4 style="margin-bottom: 12px; color: var(--text-heading);">The 3 ML Paradigms</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span
+                style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-cyan); flex-shrink: 0;"></span>
+              <p style="margin: 0;"><strong style="color: var(--accent-cyan);">Ridge Regression</strong> — Linear
+                baseline with L₂ regularization. Tests if a simple linear model can capture price dynamics.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span
+                style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-emerald); flex-shrink: 0;"></span>
+              <p style="margin: 0;"><strong style="color: var(--accent-emerald);">Random Forest</strong> — Ensemble
+                bagging of 100 decision trees. Captures non-linear interactions via averaging.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span
+                style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-amber); flex-shrink: 0;"></span>
+              <p style="margin: 0;"><strong style="color: var(--accent-amber);">LightGBM</strong> — Gradient boosted
+                trees with histogram-based binning. Sequential error correction for complex patterns.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="fade-in fade-in-delay-2">
+          <h4 style="margin-bottom: 14px; color: var(--text-heading);">13 Trading Timeframes</h4>
+          <div class="tf-group">
+            <div class="tf-group-label">Scalping / High-Frequency</div>
+            <div class="tf-chips">
+              <span class="tf-chip" data-tooltip="Native Binance interval">1m</span>
+              <span class="tf-chip" data-tooltip="Native Binance interval">3m</span>
+              <span class="tf-chip" data-tooltip="Native Binance interval">5m</span>
+              <span class="tf-chip" data-tooltip="Resampled from 5m base data">10m ⟲</span>
+            </div>
+          </div>
+          <div class="tf-group">
+            <div class="tf-group-label">Intraday</div>
+            <div class="tf-chips">
+              <span class="tf-chip" data-tooltip="Native Binance interval">15m</span>
+              <span class="tf-chip" data-tooltip="Native Binance interval">30m</span>
+              <span class="tf-chip" data-tooltip="Native Binance interval">1h</span>
+              <span class="tf-chip" data-tooltip="Native Binance interval">2h</span>
+              <span class="tf-chip" data-tooltip="Native Binance interval">4h</span>
+            </div>
+          </div>
+          <div class="tf-group">
+            <div class="tf-group-label">Swing / Position / Macro</div>
+            <div class="tf-chips">
+              <span class="tf-chip" data-tooltip="Native Binance interval">12h</span>
+              <span class="tf-chip" data-tooltip="Native (mapped from 1d)">24h</span>
+              <span class="tf-chip" data-tooltip="Resampled from 24h base data">4d ⟲</span>
+              <span class="tf-chip" data-tooltip="Resampled from 24h base data">30d ⟲</span>
+            </div>
+          </div>
+
+          <div class="callout warning" style="margin-top: 20px;">
+            <p><strong>Resampling:</strong> Non-native intervals (10m, 4d, 30d) are derived using standard candlestick
+              aggregation rules: <code class="mono"
+                style="color: var(--accent-amber);">Open=first, High=max, Low=min, Close=last, Volume=sum</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 3: SYSTEM PIPELINE
+     ════════════════════════════════════════════ -->
+  <section id="pipeline">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">System Architecture</span>
+        <h2>End-to-End Pipeline</h2>
+        <p>Six modular stages take raw market data from the Binance API through to live future forecasts — every stage
+          is independently testable.</p>
+      </div>
+
+      <div class="pipeline fade-in">
+        <div class="pipeline-step">
+          <div class="pipeline-step-inner">
+            <div class="step-num">01</div>
+            <h4>Data Acquisition</h4>
+            <p>CCXT → Binance Spot API. Paginated OHLCV fetch + financial resampling for custom intervals.</p>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-inner">
+            <div class="step-num">02</div>
+            <h4>EDA &amp; Preprocessing</h4>
+            <p>Gap validation, log-return analysis, fat-tail detection, missing value checks.</p>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-inner">
+            <div class="step-num">03</div>
+            <h4>Feature Engineering</h4>
+            <p>22 technical indicators: SMA, EMA, RSI, MACD, Bollinger Bands, ATR, volume ratios.</p>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-inner">
+            <div class="step-num">04</div>
+            <h4>Model Training</h4>
+            <p>80/20 chronological split, leak-free StandardScaler, Ridge + RF + LightGBM benchmarking.</p>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-inner">
+            <div class="step-num">05</div>
+            <h4>Backtesting</h4>
+            <p>$10,000 portfolio simulation, 0.1% fees, event-driven engine, trade-by-trade logging.</p>
+          </div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-inner">
+            <div class="step-num">06</div>
+            <h4>Forecasting</h4>
+            <p>Live next-candle predictions, BULLISH/BEARISH signals, multi-step autoregressive cones.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 4: DATA ACQUISITION
+     ════════════════════════════════════════════ -->
+  <section id="data">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Stage 01</span>
+        <h2>Data Acquisition</h2>
+        <p>Historical OHLCV data fetched from Binance's public spot API via CCXT, with custom timeframe resampling using
+          standard financial candlestick rules.</p>
+      </div>
+
+      <div class="split-layout">
+        <div class="fade-in">
+          <h4 style="margin-bottom: 14px; color: var(--text-heading);">How It Works</h4>
+          <p style="margin-bottom: 12px;">The data loader connects to the <strong
+              style="color: var(--text-primary);">Binance public spot API</strong> without requiring any private keys.
+            It uses paginated OHLCV fetching to retrieve up to 1,200 candles per timeframe.</p>
+          <p style="margin-bottom: 12px;">For timeframes not natively supported by Binance (10m, 4d, 30d), the system
+            derives them by resampling from a higher-resolution base:</p>
+          <ul style="list-style: none; margin-bottom: 16px;">
+            <li style="padding: 6px 0; color: var(--text-secondary); font-size: 0.9rem;">• <code
+                class="mono text-cyan">10m</code> → resampled from <code class="mono">5m</code> candles</li>
+            <li style="padding: 6px 0; color: var(--text-secondary); font-size: 0.9rem;">• <code
+                class="mono text-cyan">4d</code> → resampled from <code class="mono">24h</code> (1d) candles</li>
+            <li style="padding: 6px 0; color: var(--text-secondary); font-size: 0.9rem;">• <code
+                class="mono text-cyan">30d</code> → resampled from <code class="mono">24h</code> (1d) candles</li>
+          </ul>
+          <div class="formula-block">
+            Open = first &nbsp;|&nbsp; High = max &nbsp;|&nbsp; Low = min<br>
+            Close = last &nbsp;|&nbsp; Volume = Σ
+          </div>
+        </div>
+        <div class="fade-in fade-in-delay-1">
+          <h4 style="margin-bottom: 14px; color: var(--text-heading);">Data Structure</h4>
+          <p style="margin-bottom: 12px;">Each timeframe CSV contains 6 columns:</p>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px;">
+            <div class="feature-tag">timestamp</div>
+            <div class="feature-tag">open</div>
+            <div class="feature-tag">high</div>
+            <div class="feature-tag">low</div>
+            <div class="feature-tag">close</div>
+            <div class="feature-tag">volume</div>
+          </div>
+          <p style="margin-bottom: 12px;">Files are stored as: <code class="mono"
+              style="color: var(--accent-cyan);">data/raw/BTC_USDT_{timeframe}.csv</code></p>
+          <div class="callout">
+            <p><strong>Key Design Decision:</strong> All data is fetched from public endpoints — no API keys needed.
+              This makes the project fully reproducible by anyone.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 5: FEATURE ENGINEERING
+     ════════════════════════════════════════════ -->
+  <section id="features">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Stage 03</span>
+        <h2>Feature Engineering</h2>
+        <p>22 domain-specific quantitative technical indicators computed from raw OHLCV data, organized across 5
+          analytical categories.</p>
+      </div>
+
+      <div class="split-layout">
+        <div class="fade-in">
+          <div class="feature-category">
+            <div class="feature-category-title">
+              <span class="cat-icon" style="background: rgba(0, 212, 255, 0.1);">📈</span>
+              Trend &amp; Moving Averages
+            </div>
+            <div>
+              <span class="feature-tag" data-tooltip="7-period Simple Moving Average">sma_7</span>
+              <span class="feature-tag" data-tooltip="21-period Simple Moving Average">sma_21</span>
+              <span class="feature-tag" data-tooltip="14-period Exponential Moving Average">ema_14</span>
+              <span class="feature-tag" data-tooltip="close / sma_21 — trend deviation ratio">ma_ratio</span>
+            </div>
+          </div>
+
+          <div class="feature-category">
+            <div class="feature-category-title">
+              <span class="cat-icon" style="background: rgba(139, 92, 246, 0.1);">⚡</span>
+              Momentum &amp; Returns
+            </div>
+            <div>
+              <span class="feature-tag" data-tooltip="1-period percentage return">return_1</span>
+              <span class="feature-tag" data-tooltip="3-period percentage return">return_3</span>
+              <span class="feature-tag" data-tooltip="5-period percentage return">return_5</span>
+              <span class="feature-tag" data-tooltip="ln(Pₜ / Pₜ₋₁) — natural log return">log_return</span>
+              <span class="feature-tag" data-tooltip="14-period Relative Strength Index">rsi_14</span>
+              <span class="feature-tag" data-tooltip="EMA(12) − EMA(26)">macd</span>
+              <span class="feature-tag" data-tooltip="9-period EMA of MACD line">macd_signal</span>
+              <span class="feature-tag" data-tooltip="MACD − Signal line">macd_hist</span>
+            </div>
+          </div>
+
+          <div class="feature-category">
+            <div class="feature-category-title">
+              <span class="cat-icon" style="background: rgba(245, 158, 11, 0.1);">📊</span>
+              Volatility
+            </div>
+            <div>
+              <span class="feature-tag" data-tooltip="(BB_upper − BB_lower) / BB_middle">bb_width</span>
+              <span class="feature-tag"
+                data-tooltip="14-period rolling standard deviation of returns">volatility_14</span>
+              <span class="feature-tag" data-tooltip="14-period Average True Range">atr_14</span>
+            </div>
+          </div>
+
+          <div class="feature-category">
+            <div class="feature-category-title">
+              <span class="cat-icon" style="background: rgba(16, 185, 129, 0.1);">💹</span>
+              Volume &amp; Spread
+            </div>
+            <div>
+              <span class="feature-tag" data-tooltip="volume / 14-period volume MA">vol_ratio</span>
+              <span class="feature-tag" data-tooltip="(high − low) / close — intraday range">hl_spread</span>
+            </div>
+          </div>
+
+          <div class="feature-category">
+            <div class="feature-category-title">
+              <span class="cat-icon" style="background: rgba(244, 63, 94, 0.1);">🎯</span>
+              Raw Price Features
+            </div>
+            <div>
+              <span class="feature-tag" data-tooltip="Candle open price">open</span>
+              <span class="feature-tag" data-tooltip="Period high price">high</span>
+              <span class="feature-tag" data-tooltip="Period low price">low</span>
+              <span class="feature-tag" data-tooltip="Candle close price — most important feature">close</span>
+              <span class="feature-tag" data-tooltip="Trading volume in base currency">volume</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h4 style="margin-bottom: 10px; color: var(--text-heading); font-size: 0.95rem;">Key Formulas</h4>
+            <div class="formula-block">
+              RSI = 100 − 100 / (1 + RS)<br>
+              RS = avg_gain(14) / avg_loss(14)
+            </div>
+            <div class="formula-block">
+              MACD = EMA(12) − EMA(26)<br>
+              Signal = EMA(9) of MACD<br>
+              Histogram = MACD − Signal
+            </div>
+            <div class="formula-block">
+              Bollinger Upper = SMA(20) + 2σ<br>
+              Bollinger Lower = SMA(20) − 2σ<br>
+              BB Width = (Upper − Lower) / Middle
+            </div>
+            <div class="formula-block">
+              Log Return: rₜ = ln(Pₜ / Pₜ₋₁)<br>
+              Target: Pₜ₊₁ = close.shift(−1)
+            </div>
+          </div>
+        </div>
+
+        <div class="fade-in fade-in-delay-1">
+          <div class="chart-container">
+            <div class="chart-header-row">
+              <div class="chart-title-group">
+                <div class="chart-title">Feature Importance</div>
+                <div class="chart-subtitle">Tree model feature attribution (Random Forest vs LightGBM)</div>
+              </div>
+              <div class="chart-controls">
+                <div class="btn-toggle-group" id="fiToggleGroup">
+                  <button class="btn-toggle active" data-fi-mode="tech">Technical Signals Only (17)</button>
+                  <button class="btn-toggle" data-fi-mode="all">All 22 Features (Include Raw Price)</button>
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrapper canvas-fi">
+              <canvas id="featureImportanceChart"></canvas>
+            </div>
+          </div>
+
+          <div class="callout" style="margin-top: 20px;">
+            <p><strong>Key Insight:</strong> The <code class="mono text-cyan">close</code> price dominates Random Forest
+              importance at <strong style="color: var(--accent-cyan);">80.79%</strong> — the model essentially learns
+              "next close ≈ current close + small delta". LightGBM distributes importance more evenly, leveraging
+              volatility and momentum features more effectively.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 6: MODEL ARCHITECTURE
+     ════════════════════════════════════════════ -->
+  <section id="models">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Stage 04</span>
+        <h2>Model Architecture &amp; Training</h2>
+        <p>Three fundamentally different ML paradigms evaluated under a strict chronological train/test split with
+          leak-free preprocessing.</p>
+      </div>
+
+      <div class="grid-3 fade-in">
+        <div class="model-card ridge">
+          <div class="model-icon" style="color: var(--accent-cyan);">📏</div>
+          <h3>Ridge Regression</h3>
+          <div class="model-type">Linear Model with L₂ Regularization</div>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Tests if a simple linear model with weight penalty can
+            capture price dynamics. Serves as the interpretable baseline.</p>
+          <ul class="model-params">
+            <li><span class="param-key">Regularization</span><span class="param-val">α = 1.0</span></li>
+            <li><span class="param-key">Penalty</span><span class="param-val">L₂ (Ridge)</span></li>
+            <li><span class="param-key">Solver</span><span class="param-val">auto</span></li>
+            <li><span class="param-key">Paradigm</span><span class="param-val">Linear</span></li>
+          </ul>
+        </div>
+
+        <div class="model-card rf">
+          <div class="model-icon" style="color: var(--accent-emerald);">🌲</div>
+          <h3>Random Forest</h3>
+          <div class="model-type">Ensemble Bagging of Decision Trees</div>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Aggregates 100 independent trees to capture non-linear
+            feature interactions while reducing overfitting via bootstrap averaging.</p>
+          <ul class="model-params">
+            <li><span class="param-key">Trees</span><span class="param-val">100</span></li>
+            <li><span class="param-key">Max Depth</span><span class="param-val">10</span></li>
+            <li><span class="param-key">Random State</span><span class="param-val">42</span></li>
+            <li><span class="param-key">Paradigm</span><span class="param-val">Bagging</span></li>
+          </ul>
+        </div>
+
+        <div class="model-card lgbm">
+          <div class="model-icon" style="color: var(--accent-amber);">⚡</div>
+          <h3>LightGBM</h3>
+          <div class="model-type">Gradient Boosted Decision Trees</div>
+          <p style="font-size: 0.85rem; margin-bottom: 16px;">Sequentially corrects residual errors with histogram-based
+            binning for speed. Most sophisticated model in the suite.</p>
+          <ul class="model-params">
+            <li><span class="param-key">Estimators</span><span class="param-val">100</span></li>
+            <li><span class="param-key">Learning Rate</span><span class="param-val">0.05</span></li>
+            <li><span class="param-key">Max Depth</span><span class="param-val">6</span></li>
+            <li><span class="param-key">Paradigm</span><span class="param-val">Boosting</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="fade-in" style="margin-top: 48px;">
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+          <h4 style="margin-bottom: 14px; color: var(--text-heading);">Training Methodology</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <div>
+              <p style="font-size: 0.9rem; margin-bottom: 8px;"><strong
+                  style="color: var(--text-primary);">Chronological Split (80/20)</strong></p>
+              <p style="font-size: 0.85rem;">Time series data must NOT be randomly shuffled. We use the first 80% of
+                data for training and the last 20% for testing — preserving temporal order to prevent lookahead bias.
+              </p>
+            </div>
+            <div>
+              <p style="font-size: 0.9rem; margin-bottom: 8px;"><strong style="color: var(--text-primary);">Leak-Free
+                  Scaling</strong></p>
+              <p style="font-size: 0.85rem;">StandardScaler is fitted exclusively on the training partition. The test
+                set is transformed using train statistics only — never fit on test data, preventing information leakage.
+              </p>
+            </div>
+          </div>
+          <div class="formula-block" style="margin-top: 16px;">
+            Directional Accuracy = (1/N) × Σ 𝟙(sign(P̂ₜ₊₁ − Pₜ) == sign(Pₜ₊₁ − Pₜ))
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 7: MODEL EVALUATION
+     ════════════════════════════════════════════ -->
+  <section id="evaluation">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Results</span>
+        <h2>Model Evaluation</h2>
+        <p>Actual vs predicted prices for the 1-hour timeframe test set, with all three models overlaid for direct
+          comparison.</p>
+      </div>
+
+      <div class="fade-in">
+        <div class="chart-container" style="margin-bottom: 32px;">
+          <div class="chart-header-row">
+            <div class="chart-title-group">
+              <div class="chart-title">Actual vs Predicted Close Price — 1h Timeframe</div>
+              <div class="chart-subtitle">Chronological hold-out test set — zoomed Y-axis highlighting price dynamics
+                and prediction accuracy</div>
+            </div>
+            <div class="chart-controls">
+              <div class="btn-toggle-group" id="avpRangeGroup">
+                <button class="btn-toggle active" data-range="all">Full Test Set (160h)</button>
+                <button class="btn-toggle" data-range="48h">Last 48 Hours</button>
+                <button class="btn-toggle" data-range="vol">Volatility Period</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper canvas-eval">
+            <canvas id="actualVsPredChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="fade-in">
+        <div class="callout">
+          <p><strong>Why Directional Accuracy matters more than RMSE for trading:</strong> Since Pₜ₊₁ is highly
+            autocorrelated with Pₜ, a naive model predicting Pₜ₊₁ ≈ Pₜ achieves low RMSE and high R². But it has zero
+            trading utility because it never predicts a direction. <strong
+              style="color: var(--accent-cyan);">Directional Accuracy</strong> directly determines whether a trade would
+            be profitable.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 8: BACKTESTING DASHBOARD
+     ════════════════════════════════════════════ -->
+  <section id="backtest">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Stage 05</span>
+        <h2>Backtesting &amp; Trading Simulation</h2>
+        <p>Event-driven portfolio simulation starting with $10,000 USD, realistic 0.1% transaction fees per trade,
+          across all model × timeframe combinations.</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-row fade-in" id="backtestKPIs">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="grid-2 fade-in" style="margin-bottom: 32px;">
+        <div class="chart-container">
+          <div class="chart-header-row">
+            <div class="chart-title-group">
+              <div class="chart-title">Trading Performance by Timeframe</div>
+              <div class="chart-subtitle">Direct comparison across models ($10,000 starting cash)</div>
+            </div>
+            <div class="chart-controls">
+              <div class="btn-toggle-group" id="bpToggleGroup">
+                <button class="btn-toggle active" data-bp-mode="pnl">Net Profit ($)</button>
+                <button class="btn-toggle" data-bp-mode="return">Return %</button>
+                <button class="btn-toggle" data-bp-mode="balance">Balance ($)</button>
+              </div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper canvas-backtest">
+            <canvas id="backtestPerformanceChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-header-row">
+            <div class="chart-title-group">
+              <div class="chart-title">Strategy Return vs Buy &amp; Hold</div>
+              <div class="chart-subtitle">Active timeframes comparison with benchmark return overlay</div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper canvas-backtest">
+            <canvas id="strategyVsBuyHoldChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Win Rate Heatmap -->
+      <div class="fade-in">
+        <div class="card">
+          <div class="chart-title" style="margin-bottom: 4px;">Win Rate &amp; Activity Heatmap</div>
+          <div class="chart-subtitle">Timeframe × Model — percentage of profitable closed trades and execution counts
+          </div>
+          <div id="winRateHeatmap"></div>
+          <div class="heatmap-legend">
+            <div class="legend-item"><span class="legend-color-box wr-100"></span> 100% Win Rate</div>
+            <div class="legend-item"><span class="legend-color-box wr-66"></span> 66% - 75% Win Rate</div>
+            <div class="legend-item"><span class="legend-color-box wr-50"></span> 50% Win Rate</div>
+            <div class="legend-item"><span class="legend-color-box wr-25"></span> 25% - 33% Win Rate</div>
+            <div class="legend-item"><span class="legend-color-box wr-0"></span> 0% Win Rate</div>
+            <div class="legend-item"><span class="legend-color-box wr-none"></span> Filter Inactive (Preserved Cash)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backtest Summary Table -->
+      <div class="fade-in" style="margin-top: 32px;">
+        <h3 style="margin-bottom: 16px;">Complete Backtest Summary</h3>
+        <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+          <table id="backtestTable">
+            <thead>
+              <tr>
+                <th>Timeframe <span class="sort-icon">↕</span></th>
+                <th>Model <span class="sort-icon">↕</span></th>
+                <th>Final Balance <span class="sort-icon">↕</span></th>
+                <th>Net Profit <span class="sort-icon">↕</span></th>
+                <th>Return % <span class="sort-icon">↕</span></th>
+                <th>B&amp;H % <span class="sort-icon">↕</span></th>
+                <th>Trades <span class="sort-icon">↕</span></th>
+                <th>Win Rate % <span class="sort-icon">↕</span></th>
+                <th>Max DD % <span class="sort-icon">↕</span></th>
+                <th>Sharpe <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="backtestTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 9: EQUITY CURVE
+     ════════════════════════════════════════════ -->
+  <section id="equity">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Risk Analysis</span>
+        <h2>Equity Curve &amp; Drawdown</h2>
+        <p>Strategy equity vs buy-and-hold benchmark performance over the 1-hour timeframe test window.</p>
+      </div>
+
+      <div class="fade-in">
+        <div class="chart-container" style="margin-bottom: 32px;">
+          <div class="chart-header-row">
+            <div class="chart-title-group">
+              <div class="chart-title">Strategy Equity vs Buy &amp; Hold — 1h Timeframe</div>
+              <div class="chart-subtitle">Event-driven strategy equity path vs passive hold, with dynamic scaling and
+                underlying BTC price</div>
+            </div>
+          </div>
+          <div class="chart-canvas-wrapper canvas-equity">
+            <canvas id="equityCurveChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3 fade-in">
+        <div class="card">
+          <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-heading);">Max Drawdown Risks</h4>
+          <p style="font-size: 0.85rem; margin-bottom: 12px;">Higher timeframes have larger drawdowns due to longer
+            holding periods, but recover via larger trend captures.</p>
+          <ul class="model-params">
+            <li><span class="param-key">4d LightGBM</span><span class="param-val text-amber">12.27%</span></li>
+            <li><span class="param-key">24h Random Forest</span><span class="param-val text-rose">14.94%</span></li>
+            <li><span class="param-key">24h LightGBM</span><span class="param-val text-rose">17.91%</span></li>
+            <li><span class="param-key">4d Ridge/RF</span><span class="param-val text-rose">20.28%</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-heading);">Sharpe Ratio Leaders</h4>
+          <p style="font-size: 0.85rem; margin-bottom: 12px;">Risk-adjusted return metric. Values above 1.0 indicate
+            strong risk-adjusted performance.</p>
+          <ul class="model-params">
+            <li><span class="param-key">4d LightGBM</span><span class="param-val text-emerald">2.11</span></li>
+            <li><span class="param-key">4d Ridge/RF</span><span class="param-val text-emerald">1.27</span></li>
+            <li><span class="param-key">24h Ridge</span><span class="param-val text-cyan">0.77</span></li>
+            <li><span class="param-key">10m LightGBM</span><span class="param-val text-cyan">0.52</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-heading);">Fee Impact Analysis</h4>
+          <p style="font-size: 0.85rem; margin-bottom: 12px;">The 0.1% fee per trade creates a significant headwind for
+            high-frequency strategies with small returns.</p>
+          <ul class="model-params">
+            <li><span class="param-key">Fee per trade</span><span class="param-val">0.1%</span></li>
+            <li><span class="param-key">Round-trip cost</span><span class="param-val">0.2%</span></li>
+            <li><span class="param-key">Min edge needed</span><span class="param-val">&gt;0.3%</span></li>
+            <li><span class="param-key">1m avg return</span><span class="param-val text-rose">&lt;0.1%</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 10: TRADE LOG EXPLORER
+     ════════════════════════════════════════════ -->
+  <section id="trades">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Trade Logs</span>
+        <h2>Individual Trade Explorer</h2>
+        <p>Complete itemized log of every single trade executed across all model × timeframe simulations. Filter, sort,
+          and explore the data.</p>
+      </div>
+
+      <!-- Summary KPIs -->
+      <div class="kpi-row fade-in" id="tradeKPIs">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Filters & Table -->
+      <div class="fade-in">
+        <div class="table-controls">
+          <div class="table-filters">
+            <select class="filter-select" id="tradeFilterTF">
+              <option value="all">All Timeframes</option>
+            </select>
+            <select class="filter-select" id="tradeFilterModel">
+              <option value="all">All Models</option>
+            </select>
+          </div>
+          <div class="table-info" id="tradeTableInfo">Showing all trades</div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="tradeTable">
+            <thead>
+              <tr>
+                <th data-sort="Trade_ID">ID <span class="sort-icon">↕</span></th>
+                <th data-sort="Timeframe">TF <span class="sort-icon">↕</span></th>
+                <th data-sort="Model">Model <span class="sort-icon">↕</span></th>
+                <th data-sort="Entry_Time">Entry Time <span class="sort-icon">↕</span></th>
+                <th data-sort="Exit_Time">Exit Time <span class="sort-icon">↕</span></th>
+                <th data-sort="Entry_Price">Entry $ <span class="sort-icon">↕</span></th>
+                <th data-sort="Exit_Price">Exit $ <span class="sort-icon">↕</span></th>
+                <th data-sort="Trade_PnL_$">PnL $ <span class="sort-icon">↕</span></th>
+                <th data-sort="Trade_Return_%">Return % <span class="sort-icon">↕</span></th>
+                <th data-sort="Capital_After_Trade">Capital After <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="tradeTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination" id="tradePagination">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 11: LIVE FORECASTS
+     ════════════════════════════════════════════ -->
+  <section id="forecasts">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Stage 06</span>
+        <h2>Live Forecast Dashboard</h2>
+        <p>Next-candle price predictions and directional signals across all 13 timeframes, with multi-step
+          autoregressive projection cones.</p>
+      </div>
+
+      <!-- Forecast Signal Board -->
+      <div class="forecast-grid fade-in" id="forecastGrid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Multi-Step Projection -->
+      <div class="fade-in" style="margin-top: 48px;">
+        <div class="chart-container">
+          <div class="chart-title">Multi-Step Autoregressive Projections</div>
+          <div class="chart-subtitle">Select a timeframe to see +1 to +5 step recursive forecast trajectory</div>
+          <div class="tf-selector" id="projectionTFSelector">
+            <!-- Populated by JS -->
+          </div>
+          <div class="chart-canvas-wrapper canvas-forecast">
+            <canvas id="multiStepChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     SECTION 12: KEY INSIGHTS
+     ════════════════════════════════════════════ -->
+  <section id="insights">
+    <div class="container">
+      <div class="section-header fade-in">
+        <span class="section-label">Insights</span>
+        <h2>Key Learnings &amp; Viva Defense</h2>
+        <p>Critical design decisions, empirical findings, and common questions answered with evidence from the results.
+        </p>
+      </div>
+
+      <div class="fade-in" style="max-width: 800px; margin: 0 auto;">
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            <span>Why not use standard k-fold cross validation?</span>
+            <span class="toggle-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p style="margin-bottom: 12px;">Financial prices are <strong
+                  style="color: var(--text-primary);">autocorrelated time series</strong>. Standard random-shuffle
+                k-fold CV would leak future price information into the training set, creating artificially inflated
+                metrics that don't reflect real trading performance.</p>
+              <p>We strictly use <strong style="color: var(--accent-cyan);">chronological forward splits</strong>: train
+                on the first 80% of data, test on the last 20%. This ensures no future data ever contaminates the model
+                during training — exactly as in real-world deployment.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            <span>Why evaluate Directional Accuracy alongside RMSE?</span>
+            <span class="toggle-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p style="margin-bottom: 12px;">Because price Pₜ₊₁ is strongly correlated with Pₜ, a naive model
+                predicting Pₜ₊₁ ≈ Pₜ achieves <strong style="color: var(--text-primary);">low RMSE and high R²</strong>
+                but <strong style="color: var(--accent-rose);">zero trading utility</strong>.</p>
+              <p>Directional Accuracy (predicting whether the candle closes higher or lower than the current price)
+                <strong style="color: var(--accent-cyan);">directly determines trade profitability</strong>. A model
+                with higher RMSE but better directional accuracy will generate more profitable trading signals than a
+                model that simply "copies" the current price.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            <span>Why did higher timeframes trade more profitably?</span>
+            <span class="toggle-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p style="margin-bottom: 12px;">Two compounding factors:</p>
+              <p style="margin-bottom: 8px;"><strong style="color: var(--accent-cyan);">1. Signal-to-Noise
+                  Ratio:</strong> High-frequency candles (1m, 3m) contain substantial micro-structure noise — random
+                fluctuations that don't represent tradeable trends. Longer timeframes (4h, 24h, 4d) filter out this
+                noise, revealing clearer price trends.</p>
+              <p><strong style="color: var(--accent-amber);">2. Fee Drag:</strong> With 0.1% fee per trade (0.2%
+                round-trip), a 1-minute strategy needs each trade to capture &gt;0.3% move just to break even. At 4-day
+                horizons, trades typically capture 2-10% moves, making fees insignificant relative to signal magnitude.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            <span>Why does close price dominate Random Forest feature importance?</span>
+            <span class="toggle-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p style="margin-bottom: 12px;">The <code class="mono text-cyan">close</code> price has <strong
+                  style="color: var(--accent-cyan);">80.79% importance</strong> in Random Forest because the target
+                variable (next candle's close) is highly autocorrelated with the current close. The model learns that
+                "tomorrow's price ≈ today's price + small change".</p>
+              <p>LightGBM distributes importance more evenly across features (17.35% for close) because gradient
+                boosting's sequential error correction naturally focuses on <strong
+                  style="color: var(--accent-amber);">residual patterns</strong> — the small deviations that technical
+                indicators like RSI, MACD, and volatility measures can explain.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            <span>What is the best performing model × timeframe combination?</span>
+            <span class="toggle-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p style="margin-bottom: 12px;">The best overall performer is <strong
+                  style="color: var(--accent-amber);">LightGBM on the 4-day timeframe</strong>:</p>
+              <ul style="list-style: none; margin-top: 8px;">
+                <li style="padding: 4px 0; color: var(--text-secondary);">• Final Balance: <span
+                    class="mono text-emerald">$12,145.07</span> (+$2,145.07)</li>
+                <li style="padding: 4px 0; color: var(--text-secondary);">• Total Return: <span
+                    class="mono text-emerald">+21.45%</span></li>
+                <li style="padding: 4px 0; color: var(--text-secondary);">• Win Rate: <span
+                    class="mono text-emerald">100%</span> (2/2 trades)</li>
+                <li style="padding: 4px 0; color: var(--text-secondary);">• Sharpe Ratio: <span
+                    class="mono text-emerald">2.11</span></li>
+                <li style="padding: 4px 0; color: var(--text-secondary);">• vs Buy & Hold: <span
+                    class="mono text-emerald">+10.35%</span> outperformance</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-trigger" onclick="toggleAccordion(this)">
+            <span>Why did Linear Regression surprise at 24h and 4d?</span>
+            <span class="toggle-icon">+</span>
+          </button>
+          <div class="accordion-body">
+            <div class="accordion-content">
+              <p style="margin-bottom: 12px;">Ridge Regression achieved <strong
+                  style="color: var(--accent-cyan);">$11,011.30</strong> (+10.11%) on 24h and <strong
+                  style="color: var(--accent-cyan);">$11,087.89</strong> (+10.88%) on 4d — both outperforming Buy &
+                Hold. This occurs because:</p>
+              <p style="margin-bottom: 8px;"><strong style="color: var(--text-primary);">1.</strong> At longer
+                timeframes, price trends are more linear and persistent, favoring linear models.</p>
+              <p><strong style="color: var(--text-primary);">2.</strong> L₂ regularization prevents overfitting to
+                noise, making Ridge more robust for out-of-sample prediction on long horizons where the underlying
+                signal is smoother.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════ -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <h3 style="margin-bottom: 8px;">Multi-Timeframe Cryptocurrency Price Forecasting</h3>
+      <p style="margin-bottom: 20px;">Machine Learning Laboratory Project — Academic Mini-Project Submission</p>
+
+      <div class="tech-badges">
+        <span class="tech-badge">Python 3.10+</span>
+        <span class="tech-badge">scikit-learn</span>
+        <span class="tech-badge">LightGBM</span>
+        <span class="tech-badge">pandas</span>
+        <span class="tech-badge">NumPy</span>
+        <span class="tech-badge">CCXT</span>
+        <span class="tech-badge">Binance API</span>
+        <span class="tech-badge">Jupyter</span>
+        <span class="tech-badge">Chart.js</span>
+      </div>
+
+      <div
+        style="margin: 28px 0; padding: 22px 28px; background: rgba(0, 212, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: 12px; display: inline-flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;">
+        <div style="text-align: left;">
+          <div style="font-weight: 700; color: #fff; font-size: 1rem;">🔬 Looking for the 6 experimental Jupyter
+            Notebooks &amp; Lab Dossier?</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">View all data distributions and
+            training code interactively, or download the compiled single PDF report.</div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <a href="notebooks.html" class="btn-primary" style="padding: 10px 22px; font-size: 0.88rem;">Open Lab
+            Notebooks Deep Dive →</a>
+          <a href="ML_LAB_PROJECT_BTC_FORECASTING.pdf" target="_blank" class="btn-secondary"
+            style="padding: 10px 22px; font-size: 0.88rem; background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">📄
+            Download Lab Report (PDF)</a>
+        </div>
+      </div>
+
+      <div class="tree-view">
+        ├── src/<br>
+        │ &nbsp;&nbsp;├── data_loader.py &nbsp;&nbsp;# CCXT data acquisition<br>
+        │ &nbsp;&nbsp;├── features.py &nbsp;&nbsp;&nbsp;&nbsp;# 22 technical indicators<br>
+        │ &nbsp;&nbsp;├── models.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Train, split, evaluate<br>
+        │ &nbsp;&nbsp;├── backtester.py &nbsp;&nbsp;# $10K portfolio sim<br>
+        │ &nbsp;&nbsp;└── forecast.py &nbsp;&nbsp;&nbsp;&nbsp;# Multi-step projections<br>
+        ├── notebooks/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 6 Jupyter notebooks<br>
+        ├── data/raw/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# 13 OHLCV CSVs<br>
+        ├── data/processed/ &nbsp;&nbsp;&nbsp;# Feature matrices<br>
+        └── results/ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# CSVs &amp; forecasts
+      </div>
+
+      <p style="margin-top: 24px; font-size: 0.82rem; color: var(--text-muted);">Data via CCXT &amp; Binance Public API
+        &nbsp;|&nbsp; Built with ♠ for ML Lab</p>
+    </div>
+  </footer>
+
+  <!-- Data & App Scripts -->
+  <script src="web_data.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

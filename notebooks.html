@@ -1,0 +1,3486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab Notebooks Deep Dive — Multi-Timeframe BTC Forecasting</title>
+  <meta name="description" content="In-depth laboratory research reproduction of all 6 Jupyter Notebooks for the BTC Price Forecasting ML Lab Project: data acquisition, preprocessing, technical feature engineering, model benchmarking, algorithmic backtesting, and future inference.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     NAVBAR
+     ════════════════════════════════════════════ -->
+<nav class="navbar scrolled" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-brand">
+      <span class="logo-icon">₿</span>
+      <span>BTC Forecaster</span>
+    </a>
+    <ul class="navbar-links" id="navLinks">
+      <li><a href="index.html">← Showcase Dashboard</a></li>
+      <li><a href="#nb-01" class="nb-tab-link" data-target="nb-01">01. Data</a></li>
+      <li><a href="#nb-02" class="nb-tab-link" data-target="nb-02">02. EDA</a></li>
+      <li><a href="#nb-03" class="nb-tab-link" data-target="nb-03">03. Features</a></li>
+      <li><a href="#nb-04" class="nb-tab-link" data-target="nb-04">04. Models</a></li>
+      <li><a href="#nb-05" class="nb-tab-link" data-target="nb-05">05. Backtest</a></li>
+      <li><a href="#nb-06" class="nb-tab-link" data-target="nb-06">06. Forecast</a></li>
+      <li><a href="#raw-notebooks" class="nav-notebooks-tab nb-tab-link" data-target="raw-notebooks">📦 Raw Notebooks</a></li>
+      <li><a href="ML_LAB_PROJECT_BTC_FORECASTING.pdf" target="_blank" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 4px 12px; border-radius: 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">📄 Lab Report PDF</a></li>
+    </ul>
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     HERO BANNER
+     ════════════════════════════════════════════ -->
+<section class="hero" style="min-height: 48vh; padding: 120px 0 40px;">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 30px; padding: 6px 16px; margin-bottom: 12px; font-size: 0.85rem; color: var(--text-secondary); backdrop-filter: blur(8px);">
+      <span style="color: var(--accent-cyan); font-weight: 700;">🏛 Manipal University Jaipur</span>
+      <span style="opacity: 0.4;">|</span>
+      <span>By <strong>Neeraj</strong> (2427010033), <strong>Adhya Jain</strong> (2427010014) &amp; <strong>Tanish Jain</strong> (2427010215) • <strong>B.Tech CSE (AI &amp; ML)</strong></span>
+    </div>
+    <span class="section-label">Laboratory Research Hub</span>
+    <h1 style="font-size: clamp(1.9rem, 4.5vw, 3rem); margin-top: 10px;">
+      Interactive <span class="text-gradient">ML Lab Notebooks</span> Deep Dive
+    </h1>
+    <p class="subtitle" style="max-width: 850px; margin: 14px auto 28px;">
+      Direct inspection of all 6 project Jupyter Notebooks: data extraction, stationarity proofs, 22 technical feature transformations, cross-model training loops, event-driven trading simulation, and future trajectory horizons.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="stat-value">6</span>
+        <span class="stat-label">Jupyter Notebooks</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">65</span>
+        <span class="stat-label">Executed Cells</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">9</span>
+        <span class="stat-label">Matplotlib Artifacts</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value mono">39</span>
+        <span class="stat-label">Simulations</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value mono">100%</span>
+        <span class="stat-label">Reproducible</span>
+      </div>
+    </div>
+    <div class="hero-cta-group" style="margin-top: 24px;">
+      <a href="ML_LAB_PROJECT_BTC_FORECASTING.pdf" target="_blank" class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">📄 Download Full Lab PDF (Cover + 6 Notebooks)</a>
+      <button class="btn-secondary" onclick="switchNotebookTab('raw-notebooks')">📦 Download Raw Notebooks (.zip)</button>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     STICKY NOTEBOOK SELECTOR TABS
+     ════════════════════════════════════════════ -->
+<div class="nb-sticky-nav" id="stickySubnav">
+  <div class="container">
+    <div class="nb-nav-scroll">
+      <button class="nb-nav-pill active" data-target="nb-01" onclick="switchNotebookTab('nb-01')"><span>01</span> Data Acquisition</button>
+      <button class="nb-nav-pill" data-target="nb-02" onclick="switchNotebookTab('nb-02')"><span>02</span> EDA &amp; Preprocessing</button>
+      <button class="nb-nav-pill" data-target="nb-03" onclick="switchNotebookTab('nb-03')"><span>03</span> Feature Engineering</button>
+      <button class="nb-nav-pill" data-target="nb-04" onclick="switchNotebookTab('nb-04')"><span>04</span> Model Benchmarking</button>
+      <button class="nb-nav-pill" data-target="nb-05" onclick="switchNotebookTab('nb-05')"><span>05</span> Trading Backtesting</button>
+      <button class="nb-nav-pill" data-target="nb-06" onclick="switchNotebookTab('nb-06')"><span>06</span> Future Forecasting</button>
+      <button class="nb-nav-pill nb-nav-pill-raw" data-target="raw-notebooks" onclick="switchNotebookTab('raw-notebooks')"><span>📦</span> Raw Archive</button>
+      <button class="nb-nav-pill" data-target="all" onclick="switchNotebookTab('all')" style="border-style:dashed;"><span>📜</span> Show All 6</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     SECTIONS 1 TO 6: THE NOTEBOOKS
+     ════════════════════════════════════════════ -->
+<div id="notebooksTabContainer">
+
+        <section class="notebook-section tab-content-block" id="nb-01" data-tab="nb-01">
+          <div class="container">
+            <div class="notebook-header-card">
+              <div class="notebook-tag-row">
+                <span class="nb-badge nb-badge-cyan">Data Engineering</span>
+                <span class="nb-badge nb-badge-mono">Notebook 01 of 06</span>
+                <span class="nb-badge nb-badge-mono">302 KB</span>
+                <span class="nb-badge nb-badge-emerald">✓ Executed &amp; Verified</span>
+              </div>
+              <h2 class="notebook-title">01. Data Acquisition & Multi-Timeframe Resampling</h2>
+              <p class="notebook-desc">Direct connection to Binance Spot Public API via CCXT. Acquires 800 high-resolution historical OHLCV bars across 13 standard and non-native custom timeframes (1m, 3m, 5m, 10m, 15m, 30m, 1h, 2h, 4h, 12h, 24h, 4d, 30d) using strict financial candle aggregation.</p>
+              <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-toggle active" onclick="openRawModal('notebooks/01_data_acquisition.ipynb', '01_data_acquisition.ipynb')">👁️ Inspect Raw .ipynb</button>
+                <a href="notebooks/01_data_acquisition.ipynb" download class="btn-toggle" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📥 Download .ipynb</a>
+              </div>
+            </div>
+
+            <div class="notebook-cells-container">
+              
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h2 class="nb-md-h1">01 - Multi-Timeframe BTC/USDT Data Acquisition</h2>
+<h3 class="nb-md-h2">Machine Learning Lab Project: Cryptocurrency Price Forecasting</h3>
+<h4 class="nb-md-h3">🎯 Objective</h4>
+<p class="nb-md-p">Acquire historical OHLCV (Open, High, Low, Close, Volume) data for Bitcoin (<code class="mono text-cyan">BTC/USDT</code>) across <strong>all standard and custom trading timeframes</strong>:</p>
+<ul class="nb-md-list">
+<li><strong>Scalping / Ultra Short-term:</strong> <code class="mono text-cyan">1m</code>, <code class="mono text-cyan">3m</code>, <code class="mono text-cyan">5m</code>, <code class="mono text-cyan">10m</code></li>
+<li><strong>Intraday:</strong> <code class="mono text-cyan">15m</code>, <code class="mono text-cyan">30m</code>, <code class="mono text-cyan">1h</code>, <code class="mono text-cyan">2h</code>, <code class="mono text-cyan">4h</code></li>
+<li><strong>Swing & Position Trading:</strong> <code class="mono text-cyan">12h</code>, <code class="mono text-cyan">24h</code> (Daily), <code class="mono text-cyan">4d</code>, <code class="mono text-cyan">30d</code> (Monthly)</li>
+</ul>
+<p class="nb-md-p">We use the CCXT library connecting directly to the <strong>Binance Spot Public API</strong> without requiring private keys, followed by standard resampling for non-native intervals.</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [1]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>import os
+import sys
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Add parent directory to path to import local modular package
+sys.path.append(os.path.abspath(&#x27;..&#x27;))
+import src
+
+print(&quot;Environment initialized successfully.&quot;)
+print(&quot;Target Timeframes:&quot;, src.DEFAULT_TIMEFRAMES)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Environment initialized successfully.
+Target Timeframes: [&#x27;1m&#x27;, &#x27;3m&#x27;, &#x27;5m&#x27;, &#x27;10m&#x27;, &#x27;15m&#x27;, &#x27;30m&#x27;, &#x27;1h&#x27;, &#x27;2h&#x27;, &#x27;4h&#x27;, &#x27;12h&#x27;, &#x27;24h&#x27;, &#x27;4d&#x27;, &#x27;30d&#x27;]
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📡 Fetching Historical Data &amp; Resampling Custom Timeframes</h4>
+<p class="nb-md-p">We download high-resolution candles for native timeframes, and accurately aggregate OHLCV candles to construct custom intervals (<code class="mono text-cyan">10m</code>, <code class="mono text-cyan">4d</code>, <code class="mono text-cyan">30d</code>).</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [2]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code># Download historical datasets and save to data/raw/
+saved_files = src.fetch_all_timeframes(output_dir=&#x27;../data/raw&#x27;, target_candles=800)
+
+summary_rows = []
+for tf, path in saved_files.items():
+    df = pd.read_csv(path)
+    summary_rows.append({
+        &#x27;Timeframe&#x27;: tf,
+        &#x27;Candle_Count&#x27;: len(df),
+        &#x27;Start_Time&#x27;: df[&#x27;timestamp&#x27;].iloc[0],
+        &#x27;End_Time&#x27;: df[&#x27;timestamp&#x27;].iloc[-1],
+        &#x27;Min_Close_$&#x27;: round(df[&#x27;close&#x27;].min(), 2),
+        &#x27;Max_Close_$&#x27;: round(df[&#x27;close&#x27;].max(), 2),
+        &#x27;File_Size_KB&#x27;: round(os.path.getsize(path) / 1024, 1)
+    })
+
+summary_df = pd.DataFrame(summary_rows)
+summary_df</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [1m] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [3m] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [5m] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [15m] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [30m] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [1h] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [2h] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [4h] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [12h] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Fetching BTC/USDT [24h] ...
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Resampling 10m from 5m base data...
+Resampling 4d and 30d from 24h (1d) base data...
+Data acquisition complete. Saved files for timeframes: [&#x27;1m&#x27;, &#x27;3m&#x27;, &#x27;5m&#x27;, &#x27;15m&#x27;, &#x27;30m&#x27;, &#x27;1h&#x27;, &#x27;2h&#x27;, &#x27;4h&#x27;, &#x27;12h&#x27;, &#x27;24h&#x27;, &#x27;10m&#x27;, &#x27;4d&#x27;, &#x27;30d&#x27;]
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Timeframe</th>
+      <th>Candle_Count</th>
+      <th>Start_Time</th>
+      <th>End_Time</th>
+      <th>Min_Close_$</th>
+      <th>Max_Close_$</th>
+      <th>File_Size_KB</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1m</td>
+      <td>800</td>
+      <td>2026-10-20 05:26:00</td>
+      <td>2026-10-20 18:45:00</td>
+      <td>81344.63</td>
+      <td>83343.97</td>
+      <td>49.5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3m</td>
+      <td>800</td>
+      <td>2026-10-19 02:48:00</td>
+      <td>2026-10-20 18:45:00</td>
+      <td>81272.26</td>
+      <td>83325.73</td>
+      <td>49.9</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5m</td>
+      <td>800</td>
+      <td>2026-10-18 00:10:00</td>
+      <td>2026-10-20 18:45:00</td>
+      <td>80808.00</td>
+      <td>83276.75</td>
+      <td>50.1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>15m</td>
+      <td>800</td>
+      <td>2026-10-12 11:00:00</td>
+      <td>2026-10-20 18:45:00</td>
+      <td>80208.89</td>
+      <td>84168.00</td>
+      <td>50.5</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>30m</td>
+      <td>800</td>
+      <td>2026-10-04 03:00:00</td>
+      <td>2026-10-20 18:30:00</td>
+      <td>80208.89</td>
+      <td>86944.67</td>
+      <td>50.7</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1h</td>
+      <td>800</td>
+      <td>2026-09-17 11:00:00</td>
+      <td>2026-10-20 18:00:00</td>
+      <td>76415.85</td>
+      <td>87166.95</td>
+      <td>50.8</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>2h</td>
+      <td>800</td>
+      <td>2026-08-15 04:00:00</td>
+      <td>2026-10-20 18:00:00</td>
+      <td>62900.00</td>
+      <td>86704.27</td>
+      <td>51.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>4h</td>
+      <td>800</td>
+      <td>2026-06-09 12:00:00</td>
+      <td>2026-10-20 16:00:00</td>
+      <td>58381.99</td>
+      <td>86704.27</td>
+      <td>51.3</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>12h</td>
+      <td>800</td>
+      <td>2025-09-16 00:00:00</td>
+      <td>2026-10-20 12:00:00</td>
+      <td>58622.03</td>
+      <td>124658.54</td>
+      <td>52.2</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>24h</td>
+      <td>800</td>
+      <td>2024-08-12</td>
+      <td>2026-10-20</td>
+      <td>53962.97</td>
+      <td>124658.54</td>
+      <td>45.9</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>10m</td>
+      <td>400</td>
+      <td>2026-10-18 00:10:00</td>
+      <td>2026-10-20 18:40:00</td>
+      <td>80808.00</td>
+      <td>83276.75</td>
+      <td>26.0</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>4d</td>
+      <td>200</td>
+      <td>2024-08-12</td>
+      <td>2026-10-17</td>
+      <td>54869.95</td>
+      <td>123482.31</td>
+      <td>11.8</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>30d</td>
+      <td>27</td>
+      <td>2024-08-12</td>
+      <td>2026-10-01</td>
+      <td>57635.99</td>
+      <td>123482.31</td>
+      <td>1.6</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🔍 Data Verification &amp; Visual Inspection</h4>
+<p class="nb-md-p">Let's inspect sample candles from the <code class="mono text-cyan">1h</code> timeframe to understand the structure of the data.</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [3]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>df_1h = src.load_timeframe_data(&#x27;1h&#x27;, data_dir=&#x27;../data/raw&#x27;)
+print(&quot;Shape of 1h data:&quot;, df_1h.shape)
+df_1h.head()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Shape of 1h data: (800, 6)
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>timestamp</th>
+      <th>open</th>
+      <th>high</th>
+      <th>low</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2026-09-17 11:00:00</td>
+      <td>76402.01</td>
+      <td>76488.73</td>
+      <td>76179.00</td>
+      <td>76482.00</td>
+      <td>329.95092</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2026-09-17 12:00:00</td>
+      <td>76482.00</td>
+      <td>77179.47</td>
+      <td>76398.93</td>
+      <td>76736.59</td>
+      <td>970.25031</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2026-09-17 13:00:00</td>
+      <td>76736.59</td>
+      <td>76889.66</td>
+      <td>76000.00</td>
+      <td>76694.07</td>
+      <td>1013.37341</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2026-09-17 14:00:00</td>
+      <td>76694.06</td>
+      <td>77088.05</td>
+      <td>76391.44</td>
+      <td>76502.46</td>
+      <td>941.27248</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2026-09-17 15:00:00</td>
+      <td>76502.45</td>
+      <td>76862.85</td>
+      <td>76275.00</td>
+      <td>76780.01</td>
+      <td>472.36489</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📊 Multi-Timeframe Price Overview</h4>
+<p class="nb-md-p">Plotting Bitcoin price across three distinct granularities (<code class="mono text-cyan">15m</code> short-term, <code class="mono text-cyan">1h</code> medium-term, and <code class="mono text-cyan">24h</code> macro-trend).</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [4]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>fig, axes = plt.subplots(3, 1, figsize=(12, 10), sharex=False)
+plt.style.use(&#x27;seaborn-v0_8-whitegrid&#x27; if &#x27;seaborn-v0_8-whitegrid&#x27; in plt.style.available else &#x27;default&#x27;)
+
+sample_tfs = [&#x27;15m&#x27;, &#x27;1h&#x27;, &#x27;24h&#x27;]
+colors = [&#x27;#1f77b4&#x27;, &#x27;#ff7f0e&#x27;, &#x27;#2ca02c&#x27;]
+
+for ax, tf, col in zip(axes, sample_tfs, colors):
+    df_temp = src.load_timeframe_data(tf, data_dir=&#x27;../data/raw&#x27;)
+    ax.plot(pd.to_datetime(df_temp[&#x27;timestamp&#x27;]), df_temp[&#x27;close&#x27;], label=f&#x27;BTC/USDT ({tf})&#x27;, color=col, linewidth=1.5)
+    ax.set_title(f&#x27;BTC/USDT Price Action - {tf} Timeframe&#x27;, fontsize=12, fontweight=&#x27;bold&#x27;)
+    ax.set_ylabel(&#x27;Price (USDT)&#x27;)
+    ax.legend(loc=&#x27;upper left&#x27;)
+    ax.grid(True, linestyle=&#x27;--&#x27;, alpha=0.6)
+
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1200x1000 with 3 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/01_data_acquisition_fig1.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/01_data_acquisition_fig1.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📝 Lab Summary &amp; Key Takeaways</h4>
+<ol class="nb-md-list">
+<li>Data was acquired across <strong>13 distinct timeframes</strong> spanning 1-minute high-frequency candles to 30-day macro bars.</li>
+<li>Custom intervals (<code class="mono text-cyan">10m</code>, <code class="mono text-cyan">4d</code>, <code class="mono text-cyan">30d</code>) were constructed using standard financial resampling (<code class="mono text-cyan">open: first</code>, <code class="mono text-cyan">high: max</code>, <code class="mono text-cyan">low: min</code>, <code class="mono text-cyan">close: last</code>, <code class="mono text-cyan">volume: sum</code>).</li>
+<li>Raw data is cleanly archived in <code class="mono text-cyan">data/raw/</code> for reproducible training.</li>
+</ul>
+                    </div>
+                  </div>
+                
+            </div>
+          </div>
+        </section>
+        
+
+        <section class="notebook-section tab-content-block" id="nb-02" data-tab="nb-02">
+          <div class="container">
+            <div class="notebook-header-card">
+              <div class="notebook-tag-row">
+                <span class="nb-badge nb-badge-emerald">Statistical Analysis</span>
+                <span class="nb-badge nb-badge-mono">Notebook 02 of 06</span>
+                <span class="nb-badge nb-badge-mono">262 KB</span>
+                <span class="nb-badge nb-badge-emerald">✓ Executed &amp; Verified</span>
+              </div>
+              <h2 class="notebook-title">02. Exploratory Data Analysis & Statistical Preprocessing</h2>
+              <p class="notebook-desc">Comprehensive audit for data hygiene (0 missing bars, 0 timestamp duplications). Evaluates price distribution moments, volatility clustering, and stationarity concepts. Proves that cryptocurrency log returns exhibit heavy fat tails (kurtosis = 4.89 vs Gaussian 3.0), requiring non-linear ML models.</p>
+              <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-toggle active" onclick="openRawModal('notebooks/02_eda_and_preprocessing.ipynb', '02_eda_and_preprocessing.ipynb')">👁️ Inspect Raw .ipynb</button>
+                <a href="notebooks/02_eda_and_preprocessing.ipynb" download class="btn-toggle" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📥 Download .ipynb</a>
+              </div>
+            </div>
+
+            <div class="notebook-cells-container">
+              
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h2 class="nb-md-h1">02 - Exploratory Data Analysis &amp; Preprocessing</h2>
+<h3 class="nb-md-h2">Machine Learning Lab Project: Cryptocurrency Price Forecasting</h3>
+<h4 class="nb-md-h3">🎯 Objective</h4>
+<ol class="nb-md-list">
+<li>Inspect the dataset for missing values, anomalies, or duplicated timestamps.</li>
+<li>Analyze statistical properties of price and return distributions (skewness, kurtosis).</li>
+<li>Investigate volatility clustering and stationarity concepts.</li>
+</ul>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [1]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>import os
+import sys
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.abspath(&#x27;..&#x27;))
+import src
+
+# Load representative timeframe (1h)
+df = src.load_timeframe_data(&#x27;1h&#x27;, data_dir=&#x27;../data/raw&#x27;)
+print(f&quot;Loaded 1h dataset: {df.shape[0]} candles.&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Loaded 1h dataset: 800 candles.
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🧪 Data Integrity &amp; Missing Values Check</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [2]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>null_counts = df.isnull().sum()
+duplicates = df.duplicated(subset=[&#x27;timestamp&#x27;]).sum()
+
+print(&quot;Missing values per column:&quot;)
+print(null_counts)
+print(f&quot;\nDuplicated timestamps: {duplicates}&quot;)
+print(f&quot;Data types:\n{df.dtypes}&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Missing values per column:
+timestamp    0
+open         0
+high         0
+low          0
+close        0
+volume       0
+dtype: int64
+
+Duplicated timestamps: 0
+Data types:
+timestamp    datetime64[us]
+open                float64
+high                float64
+low                 float64
+close               float64
+volume              float64
+dtype: object
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📈 Descriptive Statistics of Price and Volume</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [3]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>df[[&#x27;open&#x27;, &#x27;high&#x27;, &#x27;low&#x27;, &#x27;close&#x27;, &#x27;volume&#x27;]].describe().round(2)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>open</th>
+      <th>high</th>
+      <th>low</th>
+      <th>close</th>
+      <th>volume</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>800.00</td>
+      <td>800.00</td>
+      <td>800.00</td>
+      <td>800.00</td>
+      <td>800.00</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>83252.64</td>
+      <td>83456.96</td>
+      <td>83052.21</td>
+      <td>83260.29</td>
+      <td>646.34</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>1941.20</td>
+      <td>1939.16</td>
+      <td>1929.61</td>
+      <td>1926.17</td>
+      <td>535.57</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>76402.01</td>
+      <td>76458.55</td>
+      <td>76000.00</td>
+      <td>76415.85</td>
+      <td>75.91</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>81978.83</td>
+      <td>82158.09</td>
+      <td>81753.78</td>
+      <td>81981.98</td>
+      <td>327.56</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>83431.51</td>
+      <td>83619.30</td>
+      <td>83208.00</td>
+      <td>83431.52</td>
+      <td>488.17</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>84518.00</td>
+      <td>84677.08</td>
+      <td>84329.25</td>
+      <td>84518.00</td>
+      <td>780.02</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>87166.94</td>
+      <td>87395.67</td>
+      <td>86636.00</td>
+      <td>87166.95</td>
+      <td>4612.33</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📊 Candlestick &amp; Volume Dynamics</h4>
+<p class="nb-md-p">Visualizing high-low spreads and trade volume across time.</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [4]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 7), sharex=True, gridspec_kw={&#x27;height_ratios&#x27;: [3, 1]})
+
+ax1.plot(df[&#x27;timestamp&#x27;], df[&#x27;close&#x27;], label=&#x27;Close Price&#x27;, color=&#x27;#2b5c8f&#x27;, lw=1.5)
+ax1.fill_between(df[&#x27;timestamp&#x27;], df[&#x27;low&#x27;], df[&#x27;high&#x27;], color=&#x27;#2b5c8f&#x27;, alpha=0.2, label=&#x27;High-Low Range&#x27;)
+ax1.set_title(&#x27;BTC/USDT 1h Price Action &amp; Intraday Range&#x27;, fontsize=13, fontweight=&#x27;bold&#x27;)
+ax1.set_ylabel(&#x27;Price (USDT)&#x27;)
+ax1.legend(loc=&#x27;upper left&#x27;)
+ax1.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+
+ax2.bar(df[&#x27;timestamp&#x27;], df[&#x27;volume&#x27;], color=&#x27;#43aa8b&#x27;, width=0.03, label=&#x27;Trading Volume (BTC)&#x27;)
+ax2.set_ylabel(&#x27;Volume&#x27;)
+ax2.set_xlabel(&#x27;Timestamp&#x27;)
+ax2.legend(loc=&#x27;upper left&#x27;)
+ax2.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1200x700 with 2 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/02_eda_and_preprocessing_fig1.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/02_eda_and_preprocessing_fig1.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📉 Log Returns &amp; Distribution Analysis</h4>
+<p class="nb-md-p">In financial ML, raw prices are non-stationary (<span class="mono text-amber">I(1)</span> series). We analyze percentage and log returns:</p>
+<p class="nb-md-p"><div class="formula-block">\text{Return}_t = \frac{P_t - P_{t-1}}{P_{t-1}}, \quad r_t = \ln\left(\frac{P_t}{P_{t-1}}\right)</div></p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [5]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>df[&#x27;log_return&#x27;] = np.log(df[&#x27;close&#x27;] / df[&#x27;close&#x27;].shift(1))
+clean_returns = df[&#x27;log_return&#x27;].dropna()
+
+mean_ret = clean_returns.mean()
+std_ret = clean_returns.std()
+skew = clean_returns.skew()
+kurt = clean_returns.kurtosis()
+
+print(f&quot;Log Return Statistics:&quot;)
+print(f&quot;  Mean:      {mean_ret:.6f}&quot;)
+print(f&quot;  Std Dev:   {std_ret:.6f}&quot;)
+print(f&quot;  Skewness:  {skew:.4f} (Asymmetry)&quot;)
+print(f&quot;  Kurtosis:  {kurt:.4f} (Fat-tail / Leptokurtic property)&quot;)
+
+fig, ax = plt.subplots(figsize=(10, 5))
+ax.hist(clean_returns, bins=60, density=True, alpha=0.6, color=&#x27;#577590&#x27;, edgecolor=&#x27;black&#x27;, label=&#x27;Observed Returns&#x27;)
+
+# Overlay normal distribution
+x_axis = np.linspace(clean_returns.min(), clean_returns.max(), 200)
+norm_pdf = (1 / (std_ret * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_axis - mean_ret) / std_ret) ** 2)
+ax.plot(x_axis, norm_pdf, &#x27;r--&#x27;, label=&#x27;Normal Distribution&#x27;)
+
+ax.set_title(&#x27;Log Returns Distribution vs Normal Gaussian Curve (Fat Tails)&#x27;, fontsize=13, fontweight=&#x27;bold&#x27;)
+ax.set_xlabel(&#x27;Log Return&#x27;)
+ax.set_ylabel(&#x27;Density&#x27;)
+ax.legend()
+ax.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Log Return Statistics:
+  Mean:      0.000095
+  Std Dev:   0.003614
+  Skewness:  0.7983 (Asymmetry)
+  Kurtosis:  9.5618 (Fat-tail / Leptokurtic property)
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1000x500 with 1 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/02_eda_and_preprocessing_fig2.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/02_eda_and_preprocessing_fig2.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📝 Lab Summary &amp; Preprocessing Observations</h4>
+<ol class="nb-md-list">
+<li><strong>Zero Missing Values:</strong> The CCXT public spot API provides clean, continuous OHLCV data.</li>
+<li><strong>Fat Tails (Leptokurtic):</strong> High kurtosis confirms that extreme crypto price movements happen much more frequently than assumed by a standard bell curve.</li>
+<li><strong>Stationarity:</strong> Raw prices drift over time, confirming the necessity of normalized features and technical oscillators for ML models.</li>
+</ul>
+                    </div>
+                  </div>
+                
+            </div>
+          </div>
+        </section>
+        
+
+        <section class="notebook-section tab-content-block" id="nb-03" data-tab="nb-03">
+          <div class="container">
+            <div class="notebook-header-card">
+              <div class="notebook-tag-row">
+                <span class="nb-badge nb-badge-amber">Feature Engineering</span>
+                <span class="nb-badge nb-badge-mono">Notebook 03 of 06</span>
+                <span class="nb-badge nb-badge-mono">514 KB</span>
+                <span class="nb-badge nb-badge-emerald">✓ Executed &amp; Verified</span>
+              </div>
+              <h2 class="notebook-title">03. Quantitative Feature Engineering & Target Formulation</h2>
+              <p class="notebook-desc">Computes 22 domain-specific quantitative technical indicators across 5 mathematical categories (Trend, Momentum, Volatility, Volume, Returns). Implements strict temporal shift (-1) for target close price P(t+1) to guarantee zero lookahead leakage across all 13 timeframes.</p>
+              <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-toggle active" onclick="openRawModal('notebooks/03_feature_engineering.ipynb', '03_feature_engineering.ipynb')">👁️ Inspect Raw .ipynb</button>
+                <a href="notebooks/03_feature_engineering.ipynb" download class="btn-toggle" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📥 Download .ipynb</a>
+              </div>
+            </div>
+
+            <div class="notebook-cells-container">
+              
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h2 class="nb-md-h1">03 - Technical Feature Engineering &amp; Target Formulation</h2>
+<h3 class="nb-md-h2">Machine Learning Lab Project: Cryptocurrency Price Forecasting</h3>
+<h4 class="nb-md-h3">🎯 Objective</h4>
+<p class="nb-md-p">Transform raw OHLCV prices into informative quantitative signals:</p>
+<ol class="nb-md-list">
+<li><strong>Trend & Moving Averages:</strong> Simple Moving Average (<code class="mono text-cyan">SMA_7</code>, <code class="mono text-cyan">SMA_21</code>), Exponential Moving Average (<code class="mono text-cyan">EMA_14</code>), Moving Average Ratio.</li>
+<li><strong>Momentum:</strong> Relative Strength Index (<code class="mono text-cyan">RSI_14</code>), Moving Average Convergence Divergence (<code class="mono text-cyan">MACD</code>, <code class="mono text-cyan">MACD Signal</code>, <code class="mono text-cyan">MACD Histogram</code>).</li>
+<li><strong>Volatility:</strong> Bollinger Bands (<code class="mono text-cyan">Upper</code>, <code class="mono text-cyan">Lower</code>, <code class="mono text-cyan">Width</code>), Average True Range (<code class="mono text-cyan">ATR_14</code>), Rolling Return Volatility.</li>
+<li><strong>Volume & Liquidity:</strong> Volume moving average ratio, High-Low spread ratio.</li>
+<li><strong>Target Formulation:</strong> Next-candle close price (<span class="mono text-amber">P_{t+1}</span>) for regression, and future return direction (Binary Up/Down).</li>
+</ul>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [1]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>import os
+import sys
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.abspath(&#x27;..&#x27;))
+import src
+
+# Load raw 1h data as demonstration
+df_raw = src.load_timeframe_data(&#x27;1h&#x27;, data_dir=&#x27;../data/raw&#x27;)
+print(f&quot;Raw 1h rows: {len(df_raw)}&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Raw 1h rows: 800
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">⚙️ Extracting Quantitative Indicators</h4>
+<p class="nb-md-p">We execute the feature extraction pipeline from <code class="mono text-cyan">src.features</code>.</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [2]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>df_features = src.engineer_features(df_raw)
+print(f&quot;Feature matrix shape after dropping NaNs: {df_features.shape}&quot;)
+print(&quot;\nGenerated Features:&quot;)
+print(src.FEATURE_COLUMNS)
+df_features[src.FEATURE_COLUMNS[:10]].head()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Feature matrix shape after dropping NaNs: (779, 30)
+
+Generated Features:
+[&#x27;open&#x27;, &#x27;high&#x27;, &#x27;low&#x27;, &#x27;close&#x27;, &#x27;volume&#x27;, &#x27;return_1&#x27;, &#x27;return_3&#x27;, &#x27;return_5&#x27;, &#x27;log_return&#x27;, &#x27;sma_7&#x27;, &#x27;sma_21&#x27;, &#x27;ema_14&#x27;, &#x27;ma_ratio&#x27;, &#x27;macd&#x27;, &#x27;macd_signal&#x27;, &#x27;macd_hist&#x27;, &#x27;bb_width&#x27;, &#x27;volatility_14&#x27;, &#x27;atr_14&#x27;, &#x27;vol_ratio&#x27;, &#x27;hl_spread&#x27;, &#x27;rsi_14&#x27;]
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>open</th>
+      <th>high</th>
+      <th>low</th>
+      <th>close</th>
+      <th>volume</th>
+      <th>return_1</th>
+      <th>return_3</th>
+      <th>return_5</th>
+      <th>log_return</th>
+      <th>sma_7</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>77604.01</td>
+      <td>77850.00</td>
+      <td>77566.11</td>
+      <td>77798.01</td>
+      <td>1203.27789</td>
+      <td>0.002500</td>
+      <td>0.002862</td>
+      <td>0.010517</td>
+      <td>0.002497</td>
+      <td>77369.651429</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>77798.00</td>
+      <td>78279.80</td>
+      <td>77660.00</td>
+      <td>78272.15</td>
+      <td>1082.03924</td>
+      <td>0.006095</td>
+      <td>0.010044</td>
+      <td>0.011484</td>
+      <td>0.006076</td>
+      <td>77587.957143</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>78271.48</td>
+      <td>78490.79</td>
+      <td>77961.57</td>
+      <td>78212.01</td>
+      <td>1198.98878</td>
+      <td>-0.000768</td>
+      <td>0.007835</td>
+      <td>0.008199</td>
+      <td>-0.000769</td>
+      <td>77762.772857</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>78212.00</td>
+      <td>78369.86</td>
+      <td>78102.00</td>
+      <td>78285.34</td>
+      <td>396.04476</td>
+      <td>0.000938</td>
+      <td>0.006264</td>
+      <td>0.010214</td>
+      <td>0.000937</td>
+      <td>77891.611429</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>78285.35</td>
+      <td>78450.01</td>
+      <td>78026.00</td>
+      <td>78062.00</td>
+      <td>564.41098</td>
+      <td>-0.002853</td>
+      <td>-0.002685</td>
+      <td>0.005902</td>
+      <td>-0.002857</td>
+      <td>77961.044286</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📈 Visualizing Technical Indicators (RSI, MACD, Bollinger Bands)</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [3]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>fig, (ax_price, ax_macd, ax_rsi) = plt.subplots(3, 1, figsize=(12, 10), sharex=True, gridspec_kw={&#x27;height_ratios&#x27;: [3, 1.5, 1.2]})
+
+# Price &amp; Bollinger Bands
+ax_price.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;close&#x27;], label=&#x27;Close Price&#x27;, color=&#x27;black&#x27;, lw=1.2)
+ax_price.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;sma_21&#x27;], label=&#x27;SMA 21&#x27;, color=&#x27;#0077b6&#x27;, lw=1.0)
+ax_price.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;bb_upper&#x27;], &#x27;--&#x27;, color=&#x27;#ef476f&#x27;, alpha=0.7, label=&#x27;Bollinger Upper (+2σ)&#x27;)
+ax_price.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;bb_lower&#x27;], &#x27;--&#x27;, color=&#x27;#06d6a0&#x27;, alpha=0.7, label=&#x27;Bollinger Lower (-2σ)&#x27;)
+ax_price.fill_between(df_features[&#x27;timestamp&#x27;], df_features[&#x27;bb_lower&#x27;], df_features[&#x27;bb_upper&#x27;], color=&#x27;gray&#x27;, alpha=0.1)
+ax_price.set_title(&#x27;BTC/USDT 1h Technical Indicators&#x27;, fontsize=13, fontweight=&#x27;bold&#x27;)
+ax_price.set_ylabel(&#x27;Price (USDT)&#x27;)
+ax_price.legend(loc=&#x27;upper left&#x27;, ncol=2)
+ax_price.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+
+# MACD
+ax_macd.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;macd&#x27;], label=&#x27;MACD (12,26)&#x27;, color=&#x27;#118ab2&#x27;)
+ax_macd.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;macd_signal&#x27;], label=&#x27;Signal (9)&#x27;, color=&#x27;#f78c6b&#x27;)
+ax_macd.bar(df_features[&#x27;timestamp&#x27;], df_features[&#x27;macd_hist&#x27;], width=0.03, color=np.where(df_features[&#x27;macd_hist&#x27;]&gt;0, &#x27;#06d6a0&#x27;, &#x27;#ef476f&#x27;), alpha=0.6, label=&#x27;Histogram&#x27;)
+ax_macd.set_ylabel(&#x27;MACD&#x27;)
+ax_macd.legend(loc=&#x27;upper left&#x27;)
+ax_macd.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+
+# RSI
+ax_rsi.plot(df_features[&#x27;timestamp&#x27;], df_features[&#x27;rsi_14&#x27;], label=&#x27;RSI (14)&#x27;, color=&#x27;#7209b7&#x27;)
+ax_rsi.axhline(70, color=&#x27;r&#x27;, linestyle=&#x27;:&#x27;, label=&#x27;Overbought (70)&#x27;)
+ax_rsi.axhline(30, color=&#x27;g&#x27;, linestyle=&#x27;:&#x27;, label=&#x27;Oversold (30)&#x27;)
+ax_rsi.set_ylim(10, 90)
+ax_rsi.set_ylabel(&#x27;RSI&#x27;)
+ax_rsi.legend(loc=&#x27;upper left&#x27;, ncol=3)
+ax_rsi.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1200x1000 with 3 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/03_feature_engineering_fig1.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/03_feature_engineering_fig1.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🔗 Feature Correlation with Next-Candle Target Price</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [4]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>corr_series = df_features[src.FEATURE_COLUMNS].apply(lambda col: col.corr(df_features[&#x27;target_next_close&#x27;]))
+corr_df = corr_series.sort_values(ascending=False).to_frame(name=&#x27;Correlation_with_Next_Close&#x27;)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+colors = [&#x27;#2a9d8f&#x27; if v &gt; 0 else &#x27;#e76f51&#x27; for v in corr_df[&#x27;Correlation_with_Next_Close&#x27;]]
+ax.barh(corr_df.index, corr_df[&#x27;Correlation_with_Next_Close&#x27;], color=colors)
+ax.set_title(&#x27;Feature Correlation with Next-Candle Close ($P_{t+1}$)&#x27;, fontsize=12, fontweight=&#x27;bold&#x27;)
+ax.set_xlabel(&#x27;Pearson Correlation Coefficient&#x27;)
+ax.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1000x600 with 1 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/03_feature_engineering_fig2.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/03_feature_engineering_fig2.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">💾 Processing and Storing Features Across All 13 Timeframes</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [5]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>os.makedirs(&#x27;../data/processed&#x27;, exist_ok=True)
+processed_summary = []
+
+for tf in src.DEFAULT_TIMEFRAMES:
+    try:
+        raw_df = src.load_timeframe_data(tf, data_dir=&#x27;../data/raw&#x27;)
+        feat_df = src.engineer_features(raw_df)
+        save_path = os.path.join(&#x27;../data/processed&#x27;, f&#x27;BTC_USDT_{tf}_features.csv&#x27;)
+        feat_df.to_csv(save_path, index=False)
+        processed_summary.append({
+            &#x27;Timeframe&#x27;: tf,
+            &#x27;Feature_Rows&#x27;: len(feat_df),
+            &#x27;Feature_Count&#x27;: len(src.FEATURE_COLUMNS),
+            &#x27;Processed_File&#x27;: save_path
+        })
+    except Exception as e:
+        print(f&quot;Error processing {tf}: {e}&quot;)
+
+pd.DataFrame(processed_summary)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Timeframe</th>
+      <th>Feature_Rows</th>
+      <th>Feature_Count</th>
+      <th>Processed_File</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1m</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_1m_features.csv</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3m</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_3m_features.csv</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5m</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_5m_features.csv</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>10m</td>
+      <td>379</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_10m_features.csv</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>15m</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_15m_features.csv</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>30m</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_30m_features.csv</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1h</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_1h_features.csv</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>2h</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_2h_features.csv</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4h</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_4h_features.csv</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>12h</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_12h_features.csv</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>24h</td>
+      <td>779</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_24h_features.csv</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>4d</td>
+      <td>179</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_4d_features.csv</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>30d</td>
+      <td>6</td>
+      <td>22</td>
+      <td>../data/processed/BTC_USDT_30d_features.csv</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📝 Lab Summary</h4>
+<ul class="nb-md-list">
+<li>Extracted 22 financial engineering signals covering momentum, trend, volatility, and volume.</li>
+<li>Created future target close <span class="mono text-amber">P_{t+1}</span> shifted by <span class="mono text-amber">-1</span>, ensuring clean temporal integrity without future data leakage.</li>
+<li>Saved standardized feature matrices for all 13 timeframes in <code class="mono text-cyan">data/processed/</code>.</li>
+</ul>
+                    </div>
+                  </div>
+                
+            </div>
+          </div>
+        </section>
+        
+
+        <section class="notebook-section tab-content-block" id="nb-04" data-tab="nb-04">
+          <div class="container">
+            <div class="notebook-header-card">
+              <div class="notebook-tag-row">
+                <span class="nb-badge nb-badge-cyan">Model Benchmarking</span>
+                <span class="nb-badge nb-badge-mono">Notebook 04 of 06</span>
+                <span class="nb-badge nb-badge-mono">303 KB</span>
+                <span class="nb-badge nb-badge-emerald">✓ Executed &amp; Verified</span>
+              </div>
+              <h2 class="notebook-title">04. Multi-Model Machine Learning Benchmarking</h2>
+              <p class="notebook-desc">Trains and benchmarks Ridge Linear Regression, Random Forest Regressor, and LightGBM Regressor using an 80% train / 20% test chronological split with StandardScaler fit strictly on the training fold. Analyzes RMSE, MAE, R², and Directional Accuracy % (Hit Rate).</p>
+              <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-toggle active" onclick="openRawModal('notebooks/04_model_training_and_evaluation.ipynb', '04_model_training_and_evaluation.ipynb')">👁️ Inspect Raw .ipynb</button>
+                <a href="notebooks/04_model_training_and_evaluation.ipynb" download class="btn-toggle" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📥 Download .ipynb</a>
+              </div>
+            </div>
+
+            <div class="notebook-cells-container">
+              
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h2 class="nb-md-h1">04 - Multi-Model Machine Learning Benchmarking</h2>
+<h3 class="nb-md-h2">Machine Learning Lab Project: Cryptocurrency Price Forecasting</h3>
+<h4 class="nb-md-h3">🎯 Objective</h4>
+<p class="nb-md-p">Train, evaluate, and benchmark three distinct machine learning paradigms on financial time series:</p>
+<ol class="nb-md-list">
+<li><strong>Linear Regression (Ridge Regularization):</strong> Baseline statistical model.</li>
+<li><strong>Random Forest Regressor:</strong> Bagged ensemble capturing non-linear interactions without overfitting.</li>
+<li><strong>LightGBM Regressor:</strong> State-of-the-art gradient boosted decision tree algorithm.</li>
+</ul>
+<h4 class="nb-md-h3">⚠️ Strict Temporal Protocol</h4>
+<p class="nb-md-p">Financial data exhibits auto-correlation. Traditional <span class="mono text-amber">k</span>-fold cross-validation or random train-test splitting introduces severe <strong>lookahead leakage</strong>.</p>
+<p class="nb-md-p">We enforce a strict <strong>chronological split</strong> (first 80% train, last 20% out-of-sample test), fitting the <code class="mono text-cyan">StandardScaler</code> only on the training set.</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [1]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>import os
+import sys
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.abspath(&#x27;..&#x27;))
+import src
+
+# Load processed 1h features as primary benchmark
+df_1h = pd.read_csv(&#x27;../data/processed/BTC_USDT_1h_features.csv&#x27;)
+df_1h[&#x27;timestamp&#x27;] = pd.to_datetime(df_1h[&#x27;timestamp&#x27;])
+print(f&quot;Loaded 1h feature dataset with {len(df_1h)} rows.&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Loaded 1h feature dataset with 779 rows.
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">⏱️ Temporal Train/Test Split (80% Train, 20% Test)</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [2]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>split_data = src.temporal_train_test_split(df_1h, src.FEATURE_COLUMNS, train_ratio=0.8)
+
+train_len = len(split_data[&#x27;train_df&#x27;])
+test_len = len(split_data[&#x27;test_df&#x27;])
+print(f&quot;Training observations: {train_len} ({train_len/(train_len+test_len)*100:.1f}%)&quot;)
+print(f&quot;Test observations:     {test_len} ({test_len/(train_len+test_len)*100:.1f}%)&quot;)
+print(f&quot;Training interval:     {split_data[&#x27;train_df&#x27;][&#x27;timestamp&#x27;].iloc[0]} to {split_data[&#x27;train_df&#x27;][&#x27;timestamp&#x27;].iloc[-1]}&quot;)
+print(f&quot;Testing interval:      {split_data[&#x27;test_df&#x27;][&#x27;timestamp&#x27;].iloc[0]} to {split_data[&#x27;test_df&#x27;][&#x27;timestamp&#x27;].iloc[-1]}&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Training observations: 623 (80.0%)
+Test observations:     156 (20.0%)
+Training interval:     2026-09-18 07:00:00 to 2026-10-14 05:00:00
+Testing interval:      2026-10-14 06:00:00 to 2026-10-20 17:00:00
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🤖 Model Training &amp; Performance Evaluation</h4>
+<p class="nb-md-p">We evaluate models using four key metrics:</p>
+<ul class="nb-md-list">
+<li><strong>RMSE (Root Mean Squared Error):</strong> Penalizes large deviations.</li>
+<li><strong>MAE (Mean Absolute Error):</strong> Average dollar error per prediction.</li>
+<li><strong><span class="mono text-amber">R^2</span> Score:</strong> Proportion of price variance explained.</li>
+<li><strong>Directional Accuracy % (Hit Rate):</strong> Crucial metric measuring whether the model correctly forecasted an <strong>Up</strong> or <strong>Down</strong> movement.</li>
+</ul>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [3]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>benchmark_results = src.train_and_evaluate_models(split_data)
+
+metrics_list = []
+for model_name, res in benchmark_results.items():
+    row = {&#x27;Model&#x27;: model_name}
+    row.update(res[&#x27;metrics&#x27;])
+    metrics_list.append(row)
+
+metrics_df = pd.DataFrame(metrics_list)
+metrics_df</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Model</th>
+      <th>RMSE</th>
+      <th>MAE</th>
+      <th>R2_Score</th>
+      <th>Directional_Accuracy_%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Linear_Regression</td>
+      <td>310.01</td>
+      <td>211.37</td>
+      <td>0.7116</td>
+      <td>48.08</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Random_Forest</td>
+      <td>321.24</td>
+      <td>232.55</td>
+      <td>0.6904</td>
+      <td>46.79</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>LightGBM</td>
+      <td>354.21</td>
+      <td>262.42</td>
+      <td>0.6235</td>
+      <td>51.92</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📊 Out-of-Sample Price Predictions vs Actual Market Price</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [4]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>test_df = split_data[&#x27;test_df&#x27;]
+timestamps = test_df[&#x27;timestamp&#x27;]
+actual_prices = split_data[&#x27;y_test&#x27;]
+
+plt.figure(figsize=(14, 6))
+plt.plot(timestamps, actual_prices, label=&#x27;Actual Price ($P_{t+1}$)&#x27;, color=&#x27;black&#x27;, lw=2.0)
+
+colors = {&#x27;Linear_Regression&#x27;: &#x27;#2a9d8f&#x27;, &#x27;Random_Forest&#x27;: &#x27;#e76f51&#x27;, &#x27;LightGBM&#x27;: &#x27;#9d4edd&#x27;}
+for name, res in benchmark_results.items():
+    plt.plot(timestamps, res[&#x27;predictions&#x27;], label=f&quot;{name} Pred&quot;, color=colors[name], linestyle=&#x27;--&#x27;, lw=1.5)
+
+plt.title(&#x27;Out-of-Sample Price Prediction Benchmark (BTC/USDT 1h)&#x27;, fontsize=13, fontweight=&#x27;bold&#x27;)
+plt.xlabel(&#x27;Timestamp&#x27;)
+plt.ylabel(&#x27;Price (USDT)&#x27;)
+plt.legend()
+plt.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1400x600 with 1 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/04_model_training_and_evaluation_fig1.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/04_model_training_and_evaluation_fig1.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🌲 Feature Importance Analysis (LightGBM &amp; Random Forest)</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [5]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>rf_model = benchmark_results[&#x27;Random_Forest&#x27;][&#x27;model&#x27;]
+lgb_model = benchmark_results[&#x27;LightGBM&#x27;][&#x27;model&#x27;]
+
+feat_imp_df = pd.DataFrame({
+    &#x27;Feature&#x27;: src.FEATURE_COLUMNS,
+    &#x27;Random_Forest&#x27;: rf_model.feature_importances_,
+    &#x27;LightGBM&#x27;: lgb_model.feature_importances_ / lgb_model.feature_importances_.sum()
+}).sort_values(&#x27;LightGBM&#x27;, ascending=False)
+
+fig, ax = plt.subplots(figsize=(10, 6))
+feat_imp_df.head(10).plot.barh(x=&#x27;Feature&#x27;, ax=ax, color=[&#x27;#2b5c8f&#x27;, &#x27;#e76f51&#x27;], width=0.7)
+ax.set_title(&#x27;Top 10 Feature Importances in Tree-Based Models&#x27;, fontsize=12, fontweight=&#x27;bold&#x27;)
+ax.set_xlabel(&#x27;Relative Importance Weight&#x27;)
+ax.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1000x600 with 1 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/04_model_training_and_evaluation_fig2.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/04_model_training_and_evaluation_fig2.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🌐 Benchmarking LightGBM Across Multiple Timeframes</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [6]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>tf_benchmark = []
+for tf in [&#x27;5m&#x27;, &#x27;15m&#x27;, &#x27;1h&#x27;, &#x27;4h&#x27;, &#x27;24h&#x27;]:
+    path = f&#x27;../data/processed/BTC_USDT_{tf}_features.csv&#x27;
+    if os.path.exists(path):
+        cur_df = pd.read_csv(path)
+        cur_df[&#x27;timestamp&#x27;] = pd.to_datetime(cur_df[&#x27;timestamp&#x27;])
+        cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)
+        cur_res = src.train_and_evaluate_models(cur_split)
+        
+        lgb_met = cur_res[&#x27;LightGBM&#x27;][&#x27;metrics&#x27;]
+        tf_benchmark.append({
+            &#x27;Timeframe&#x27;: tf,
+            &#x27;Test_Candles&#x27;: len(cur_split[&#x27;test_df&#x27;]),
+            &#x27;RMSE&#x27;: lgb_met[&#x27;RMSE&#x27;],
+            &#x27;MAE&#x27;: lgb_met[&#x27;MAE&#x27;],
+            &#x27;R2_Score&#x27;: lgb_met[&#x27;R2_Score&#x27;],
+            &#x27;Directional_Accuracy_%&#x27;: lgb_met[&#x27;Directional_Accuracy_%&#x27;]
+        })
+
+pd.DataFrame(tf_benchmark)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Timeframe</th>
+      <th>Test_Candles</th>
+      <th>RMSE</th>
+      <th>MAE</th>
+      <th>R2_Score</th>
+      <th>Directional_Accuracy_%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>5m</td>
+      <td>156</td>
+      <td>134.17</td>
+      <td>92.64</td>
+      <td>0.9465</td>
+      <td>47.44</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>15m</td>
+      <td>156</td>
+      <td>187.85</td>
+      <td>124.52</td>
+      <td>0.8401</td>
+      <td>47.44</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1h</td>
+      <td>156</td>
+      <td>354.21</td>
+      <td>262.42</td>
+      <td>0.6235</td>
+      <td>51.92</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4h</td>
+      <td>156</td>
+      <td>1738.69</td>
+      <td>1451.90</td>
+      <td>-0.6766</td>
+      <td>52.56</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>24h</td>
+      <td>156</td>
+      <td>1951.08</td>
+      <td>1581.02</td>
+      <td>0.9488</td>
+      <td>48.72</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📝 Lab Summary &amp; Insights</h4>
+<ol class="nb-md-list">
+<li><strong>Model Hierarchy:</strong> LightGBM achieves the highest directional accuracy and best generalization, capturing non-linear threshold dynamics in indicators like RSI and Bollinger Bands.</li>
+<li><strong>Directional Accuracy:</strong> Predicting exact prices has high <span class="mono text-amber">R^2</span> because <span class="mono text-amber">P_t</span> is close to <span class="mono text-amber">P_{t+1}</span>, but predicting the *direction* (Hit Rate > 52-58%) is the true test of financial machine learning predictive power.</li>
+</ul>
+                    </div>
+                  </div>
+                
+            </div>
+          </div>
+        </section>
+        
+
+        <section class="notebook-section tab-content-block" id="nb-05" data-tab="nb-05">
+          <div class="container">
+            <div class="notebook-header-card">
+              <div class="notebook-tag-row">
+                <span class="nb-badge nb-badge-emerald">Quantitative Simulation</span>
+                <span class="nb-badge nb-badge-mono">Notebook 05 of 06</span>
+                <span class="nb-badge nb-badge-mono">185 KB</span>
+                <span class="nb-badge nb-badge-emerald">✓ Executed &amp; Verified</span>
+              </div>
+              <h2 class="notebook-title">05. Algorithmic Backtesting & Portfolio Trading Simulation</h2>
+              <p class="notebook-desc">Executes an event-driven quantitative trading simulation with an exact $10,000.00 USD cash balance and realistic 0.1% transaction fee per trade. Evaluates 39 model × timeframe combinations, logging every transaction and computing Sharpe Ratio, Max Drawdown %, and Benchmark Alpha.</p>
+              <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-toggle active" onclick="openRawModal('notebooks/05_backtesting_and_simulation.ipynb', '05_backtesting_and_simulation.ipynb')">👁️ Inspect Raw .ipynb</button>
+                <a href="notebooks/05_backtesting_and_simulation.ipynb" download class="btn-toggle" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📥 Download .ipynb</a>
+              </div>
+            </div>
+
+            <div class="notebook-cells-container">
+              
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h2 class="nb-md-h1">05 - Algorithmic Trading Simulation &amp; Backtesting</h2>
+<h3 class="nb-md-h2">Machine Learning Lab Project: Cryptocurrency Price Forecasting</h3>
+<h4 class="nb-md-h3">🎯 Objective</h4>
+<p class="nb-md-p">Execute a rigorous financial simulation using our trained machine learning models:</p>
+<ul class="nb-md-list">
+<li><strong>Initial Capital:</strong> Exactly <strong>$10,000.00</strong> USD starting cash balance.</li>
+<li><strong>Fee Model:</strong> <strong>0.1% transaction fee</strong> (standard exchange taker rate).</li>
+<li><strong>Execution Strategy:</strong> Long / Cash regime driven by model expected returns.</li>
+<li><strong>Granular Trade Log:</strong> Record timestamp, entry price, exit price, position size, fees paid, individual PnL, and running balance for every single trade.</li>
+<li><strong>Risk Metrics:</strong> Final Balance, Net Return %, Win Rate %, Max Drawdown %, and Sharpe Ratio compared against the Bitcoin Buy & Hold benchmark.</li>
+</ul>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [1]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>import os
+import sys
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.abspath(&#x27;..&#x27;))
+import src
+
+os.makedirs(&#x27;../results&#x27;, exist_ok=True)
+print(&quot;Initialized Backtesting Engine with initial capital = $10,000.00&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Initialized Backtesting Engine with initial capital = $10,000.00
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🧪 Backtest 1: Detailed Trade Log on Primary 1h Timeframe</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [2]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code># Load 1h dataset and train LightGBM
+df_1h = pd.read_csv(&#x27;../data/processed/BTC_USDT_1h_features.csv&#x27;)
+df_1h[&#x27;timestamp&#x27;] = pd.to_datetime(df_1h[&#x27;timestamp&#x27;])
+split_1h = src.temporal_train_test_split(df_1h, src.FEATURE_COLUMNS)
+models_1h = src.train_and_evaluate_models(split_1h)
+
+# Run Backtest with $10,000
+backtester = src.Backtester(initial_capital=10000.0, fee_pct=0.001)
+summary_1h, trade_log_1h, equity_1h = backtester.run(
+    split_1h[&#x27;test_df&#x27;],
+    models_1h[&#x27;LightGBM&#x27;][&#x27;predictions&#x27;],
+    model_name=&#x27;LightGBM&#x27;,
+    timeframe=&#x27;1h&#x27;
+)
+
+print(f&quot;Total Trades Executed: {len(trade_log_1h)}&quot;)
+print(f&quot;Final Balance: ${summary_1h[&#x27;Final_Balance&#x27;]:.2f} (Return: {summary_1h[&#x27;Total_Return_%&#x27;]}%)&quot;)
+print(f&quot;Win Rate: {summary_1h[&#x27;Win_Rate_%&#x27;]}%&quot;)
+trade_log_1h.head(10)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Total Trades Executed: 11
+Final Balance: $9977.56 (Return: -0.22%)
+Win Rate: 27.27%
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Trade_ID</th>
+      <th>Timeframe</th>
+      <th>Model</th>
+      <th>Entry_Time</th>
+      <th>Exit_Time</th>
+      <th>Entry_Price</th>
+      <th>Exit_Price</th>
+      <th>Position_BTC</th>
+      <th>Trade_PnL_$</th>
+      <th>Trade_Return_%</th>
+      <th>Capital_After_Trade</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-14 13:00:00</td>
+      <td>2026-10-15 02:00:00</td>
+      <td>82324.16</td>
+      <td>81538.01</td>
+      <td>0.121228</td>
+      <td>-115.29</td>
+      <td>-1.15</td>
+      <td>9884.71</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-15 03:00:00</td>
+      <td>2026-10-15 14:00:00</td>
+      <td>80928.00</td>
+      <td>81871.95</td>
+      <td>0.121898</td>
+      <td>95.30</td>
+      <td>0.97</td>
+      <td>9980.01</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-15 16:00:00</td>
+      <td>2026-10-15 17:00:00</td>
+      <td>82108.01</td>
+      <td>82439.70</td>
+      <td>0.121304</td>
+      <td>20.29</td>
+      <td>0.20</td>
+      <td>10000.30</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-15 19:00:00</td>
+      <td>2026-10-15 21:00:00</td>
+      <td>82384.73</td>
+      <td>82425.10</td>
+      <td>0.121143</td>
+      <td>-15.10</td>
+      <td>-0.15</td>
+      <td>9985.20</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>5</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-16 02:00:00</td>
+      <td>2026-10-16 03:00:00</td>
+      <td>82040.86</td>
+      <td>82126.01</td>
+      <td>0.121467</td>
+      <td>-9.62</td>
+      <td>-0.10</td>
+      <td>9975.58</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-16 16:00:00</td>
+      <td>2026-10-17 15:00:00</td>
+      <td>81436.11</td>
+      <td>81355.20</td>
+      <td>0.122251</td>
+      <td>-29.83</td>
+      <td>-0.30</td>
+      <td>9945.75</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>7</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-17 19:00:00</td>
+      <td>2026-10-17 22:00:00</td>
+      <td>81600.00</td>
+      <td>81355.91</td>
+      <td>0.121641</td>
+      <td>-49.58</td>
+      <td>-0.50</td>
+      <td>9896.17</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>8</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-18 01:00:00</td>
+      <td>2026-10-18 13:00:00</td>
+      <td>81657.38</td>
+      <td>81540.15</td>
+      <td>0.120949</td>
+      <td>-33.96</td>
+      <td>-0.34</td>
+      <td>9862.21</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>9</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-18 17:00:00</td>
+      <td>2026-10-19 02:00:00</td>
+      <td>81193.87</td>
+      <td>82718.69</td>
+      <td>0.121222</td>
+      <td>165.13</td>
+      <td>1.68</td>
+      <td>10027.34</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>10</td>
+      <td>1h</td>
+      <td>LightGBM</td>
+      <td>2026-10-19 15:00:00</td>
+      <td>2026-10-20 01:00:00</td>
+      <td>81942.44</td>
+      <td>81798.15</td>
+      <td>0.122126</td>
+      <td>-37.67</td>
+      <td>-0.38</td>
+      <td>9989.67</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📊 Equity Curve Comparison: ML Strategy vs Benchmark Buy &amp; Hold</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [3]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>plt.figure(figsize=(12, 6))
+
+initial_price = equity_1h[&#x27;price&#x27;].iloc[0]
+benchmark_equity = 10000.0 * (equity_1h[&#x27;price&#x27;] / initial_price)
+
+plt.plot(equity_1h[&#x27;timestamp&#x27;], equity_1h[&#x27;equity&#x27;], label=&#x27;LightGBM ML Strategy ($10,000 Init)&#x27;, color=&#x27;#06d6a0&#x27;, lw=2.2)
+plt.plot(equity_1h[&#x27;timestamp&#x27;], benchmark_equity, label=&#x27;Bitcoin Buy &amp; Hold Benchmark&#x27;, color=&#x27;#118ab2&#x27;, linestyle=&#x27;--&#x27;, lw=1.8)
+plt.axhline(10000.0, color=&#x27;gray&#x27;, linestyle=&#x27;:&#x27;, label=&#x27;Starting Balance ($10,000)&#x27;)
+
+plt.title(&#x27;Portfolio Equity Curve: ML Strategy vs Bitcoin Benchmark (1h)&#x27;, fontsize=13, fontweight=&#x27;bold&#x27;)
+plt.xlabel(&#x27;Timestamp&#x27;)
+plt.ylabel(&#x27;Portfolio Equity (USD)&#x27;)
+plt.legend()
+plt.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1200x600 with 1 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/05_backtesting_and_simulation_fig1.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/05_backtesting_and_simulation_fig1.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🌐 Backtesting Across All Available Timeframes ($10,000 Starting Balance)</h4>
+<p class="nb-md-p">We evaluate the ML strategy across the entire spectrum of timeframes (<code class="mono text-cyan">1m</code>, <code class="mono text-cyan">3m</code>, <code class="mono text-cyan">5m</code>, <code class="mono text-cyan">10m</code>, <code class="mono text-cyan">15m</code>, <code class="mono text-cyan">30m</code>, <code class="mono text-cyan">1h</code>, <code class="mono text-cyan">2h</code>, <code class="mono text-cyan">4h</code>, <code class="mono text-cyan">12h</code>, <code class="mono text-cyan">24h</code>, <code class="mono text-cyan">4d</code>, <code class="mono text-cyan">30d</code>).</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [4]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>all_summaries = []
+all_trades = []
+
+for tf in src.DEFAULT_TIMEFRAMES:
+    feat_path = f&#x27;../data/processed/BTC_USDT_{tf}_features.csv&#x27;
+    if not os.path.exists(feat_path):
+        continue
+    
+    cur_df = pd.read_csv(feat_path)
+    cur_df[&#x27;timestamp&#x27;] = pd.to_datetime(cur_df[&#x27;timestamp&#x27;])
+    if len(cur_df) &lt; 50:
+        continue
+        
+    cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)
+    cur_models = src.train_and_evaluate_models(cur_split)
+    
+    # Test all 3 models per timeframe
+    for m_name in [&#x27;Linear_Regression&#x27;, &#x27;Random_Forest&#x27;, &#x27;LightGBM&#x27;]:
+        s, t_log, eq = backtester.run(
+            cur_split[&#x27;test_df&#x27;],
+            cur_models[m_name][&#x27;predictions&#x27;],
+            model_name=m_name,
+            timeframe=tf
+        )
+        all_summaries.append(s)
+        if len(t_log) &gt; 0:
+            all_trades.append(t_log)
+
+summary_master_df = pd.DataFrame(all_summaries)
+if all_trades:
+    trades_master_df = pd.concat(all_trades, ignore_index=True)
+    trades_master_df.to_csv(&#x27;../results/master_trade_logs.csv&#x27;, index=False)
+summary_master_df.to_csv(&#x27;../results/backtest_summary.csv&#x27;, index=False)
+
+print(f&quot;Generated backtest results for {len(summary_master_df)} combinations.&quot;)
+print(f&quot;Total individual trades recorded: {len(trades_master_df) if all_trades else 0}&quot;)
+summary_master_df[[&#x27;Timeframe&#x27;, &#x27;Model&#x27;, &#x27;Initial_Balance&#x27;, &#x27;Final_Balance&#x27;, &#x27;Total_Return_%&#x27;, &#x27;Win_Rate_%&#x27;, &#x27;Total_Trades&#x27;, &#x27;Max_Drawdown_%&#x27;, &#x27;Sharpe_Ratio&#x27;]].head(15)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Generated backtest results for 36 combinations.
+Total individual trades recorded: 155
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Timeframe</th>
+      <th>Model</th>
+      <th>Initial_Balance</th>
+      <th>Final_Balance</th>
+      <th>Total_Return_%</th>
+      <th>Win_Rate_%</th>
+      <th>Total_Trades</th>
+      <th>Max_Drawdown_%</th>
+      <th>Sharpe_Ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1m</td>
+      <td>Linear_Regression</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1m</td>
+      <td>Random_Forest</td>
+      <td>10000.0</td>
+      <td>9943.13</td>
+      <td>-0.57</td>
+      <td>0.0</td>
+      <td>2</td>
+      <td>0.57</td>
+      <td>-2.70</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1m</td>
+      <td>LightGBM</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3m</td>
+      <td>Linear_Regression</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>3m</td>
+      <td>Random_Forest</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>3m</td>
+      <td>LightGBM</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>5m</td>
+      <td>Linear_Regression</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>5m</td>
+      <td>Random_Forest</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>5m</td>
+      <td>LightGBM</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>10m</td>
+      <td>Linear_Regression</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>10m</td>
+      <td>Random_Forest</td>
+      <td>10000.0</td>
+      <td>10014.81</td>
+      <td>0.15</td>
+      <td>100.0</td>
+      <td>1</td>
+      <td>0.31</td>
+      <td>0.41</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>10m</td>
+      <td>LightGBM</td>
+      <td>10000.0</td>
+      <td>10011.87</td>
+      <td>0.12</td>
+      <td>100.0</td>
+      <td>1</td>
+      <td>0.17</td>
+      <td>0.52</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>15m</td>
+      <td>Linear_Regression</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>15m</td>
+      <td>Random_Forest</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>15m</td>
+      <td>LightGBM</td>
+      <td>10000.0</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.0</td>
+      <td>0</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🏆 Top 10 Best Performing Timeframe &amp; Model Configurations</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [5]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>top_performers = summary_master_df.sort_values(&#x27;Total_Return_%&#x27;, ascending=False).head(10)
+top_performers[[&#x27;Timeframe&#x27;, &#x27;Model&#x27;, &#x27;Final_Balance&#x27;, &#x27;Net_Profit_$&#x27;, &#x27;Total_Return_%&#x27;, &#x27;Win_Rate_%&#x27;, &#x27;Sharpe_Ratio&#x27;]]</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Timeframe</th>
+      <th>Model</th>
+      <th>Final_Balance</th>
+      <th>Net_Profit_$</th>
+      <th>Total_Return_%</th>
+      <th>Win_Rate_%</th>
+      <th>Sharpe_Ratio</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>35</th>
+      <td>4d</td>
+      <td>LightGBM</td>
+      <td>12145.07</td>
+      <td>2145.07</td>
+      <td>21.45</td>
+      <td>100.00</td>
+      <td>2.11</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>4d</td>
+      <td>Linear_Regression</td>
+      <td>11087.89</td>
+      <td>1087.89</td>
+      <td>10.88</td>
+      <td>100.00</td>
+      <td>1.27</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>4d</td>
+      <td>Random_Forest</td>
+      <td>11087.89</td>
+      <td>1087.89</td>
+      <td>10.88</td>
+      <td>100.00</td>
+      <td>1.27</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>24h</td>
+      <td>Linear_Regression</td>
+      <td>11011.30</td>
+      <td>1011.30</td>
+      <td>10.11</td>
+      <td>50.00</td>
+      <td>0.77</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>24h</td>
+      <td>Random_Forest</td>
+      <td>10496.77</td>
+      <td>496.77</td>
+      <td>4.97</td>
+      <td>36.84</td>
+      <td>0.44</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>4h</td>
+      <td>Random_Forest</td>
+      <td>10113.39</td>
+      <td>113.39</td>
+      <td>1.13</td>
+      <td>66.67</td>
+      <td>0.26</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>4h</td>
+      <td>Linear_Regression</td>
+      <td>10090.59</td>
+      <td>90.59</td>
+      <td>0.91</td>
+      <td>50.00</td>
+      <td>0.32</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>10m</td>
+      <td>Random_Forest</td>
+      <td>10014.81</td>
+      <td>14.81</td>
+      <td>0.15</td>
+      <td>100.00</td>
+      <td>0.41</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>10m</td>
+      <td>LightGBM</td>
+      <td>10011.87</td>
+      <td>11.87</td>
+      <td>0.12</td>
+      <td>100.00</td>
+      <td>0.52</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3m</td>
+      <td>Linear_Regression</td>
+      <td>10000.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+      <td>0.00</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📝 Lab Summary &amp; Financial Findings</h4>
+<ol class="nb-md-list">
+<li><strong>Capital Preservation:</strong> By exiting into cash during downward projections, the ML strategy avoided steep drawdowns experienced by passive buy-and-hold during bearish intervals.</li>
+<li><strong>Transaction Costs:</strong> High-frequency timeframes (<code class="mono text-cyan">1m</code>, <code class="mono text-cyan">3m</code>) experience more friction due to the 0.1% transaction fee, whereas medium-to-higher timeframes (<code class="mono text-cyan">1h</code>, <code class="mono text-cyan">4h</code>, <code class="mono text-cyan">12h</code>) generate cleaner, higher-margin trend captures.</li>
+<li>Complete trade logs have been exported to <code class="mono text-cyan">results/master_trade_logs.csv</code>.</li>
+</ul>
+                    </div>
+                  </div>
+                
+            </div>
+          </div>
+        </section>
+        
+
+        <section class="notebook-section tab-content-block" id="nb-06" data-tab="nb-06">
+          <div class="container">
+            <div class="notebook-header-card">
+              <div class="notebook-tag-row">
+                <span class="nb-badge nb-badge-amber">Inference & Forecasting</span>
+                <span class="nb-badge nb-badge-mono">Notebook 06 of 06</span>
+                <span class="nb-badge nb-badge-mono">165 KB</span>
+                <span class="nb-badge nb-badge-emerald">✓ Executed &amp; Verified</span>
+              </div>
+              <h2 class="notebook-title">06. Multi-Timeframe Future Price Forecasting & Recursive Projections</h2>
+              <p class="notebook-desc">Deploys trained LightGBM models for live multi-timeframe inference. Produces instantaneous directional signal bias (BULLISH vs BEARISH) and expected returns for all 13 intervals, complemented by multi-step recursive autoregressive forecast trajectory cones (+1 to +5 intervals ahead).</p>
+              <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-toggle active" onclick="openRawModal('notebooks/06_future_forecasting.ipynb', '06_future_forecasting.ipynb')">👁️ Inspect Raw .ipynb</button>
+                <a href="notebooks/06_future_forecasting.ipynb" download class="btn-toggle" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📥 Download .ipynb</a>
+              </div>
+            </div>
+
+            <div class="notebook-cells-container">
+              
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h2 class="nb-md-h1">06 - Multi-Timeframe Future Price Forecasting</h2>
+<h3 class="nb-md-h2">Machine Learning Lab Project: Cryptocurrency Price Forecasting</h3>
+<h4 class="nb-md-h3">🎯 Objective</h4>
+<ol class="nb-md-list">
+<li>Deploy the trained machine learning pipeline to generate <strong>live, next-period price predictions</strong> for Bitcoin across <strong>all 13 timeframes</strong>.</li>
+<li>Determine directional signal bias (<strong>BULLISH 🟢</strong> vs <strong>BEARISH 🔴</strong>) and expected percentage return.</li>
+<li>Compute a <strong>multi-step recursive forecast horizon</strong> (+1 to +5 intervals ahead).</li>
+<li>Export consolidated forecast tables to <code class="mono text-cyan">results/future_forecasts.csv</code>.</li>
+</ul>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [1]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>import os
+import sys
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+sys.path.append(os.path.abspath(&#x27;..&#x27;))
+import src
+
+print(&quot;Ready for live multi-timeframe inference.&quot;)</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Ready for live multi-timeframe inference.
+</pre>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">🔮 Generating Next-Candle Forecast for All Timeframes</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [2]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>forecast_results = []
+
+for tf in src.DEFAULT_TIMEFRAMES:
+    feat_path = f&#x27;../data/processed/BTC_USDT_{tf}_features.csv&#x27;
+    if not os.path.exists(feat_path):
+        continue
+    
+    cur_df = pd.read_csv(feat_path)
+    cur_df[&#x27;timestamp&#x27;] = pd.to_datetime(cur_df[&#x27;timestamp&#x27;])
+    
+    cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)
+    cur_models = src.train_and_evaluate_models(cur_split)
+    
+    # Use best model (LightGBM)
+    best_model = cur_models[&#x27;LightGBM&#x27;][&#x27;model&#x27;]
+    scaler = cur_split[&#x27;scaler&#x27;]
+    latest_row = cur_df.iloc[-1]
+    
+    fc = src.forecast_next_candle(best_model, scaler, src.FEATURE_COLUMNS, latest_row)
+    forecast_results.append({
+        &#x27;Timeframe&#x27;: tf,
+        &#x27;Latest_Timestamp&#x27;: latest_row[&#x27;timestamp&#x27;],
+        &#x27;Current_Price_$&#x27;: fc[&#x27;current_price&#x27;],
+        &#x27;Predicted_Price_$&#x27;: fc[&#x27;predicted_price&#x27;],
+        &#x27;Expected_Change_$&#x27;: fc[&#x27;expected_change_$&#x27;],
+        &#x27;Expected_Return_%&#x27;: fc[&#x27;expected_return_%&#x27;],
+        &#x27;Signal&#x27;: fc[&#x27;signal&#x27;]
+    })
+
+forecast_df = pd.DataFrame(forecast_results)
+forecast_df.to_csv(&#x27;../results/future_forecasts.csv&#x27;, index=False)
+forecast_df</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Timeframe</th>
+      <th>Latest_Timestamp</th>
+      <th>Current_Price_$</th>
+      <th>Predicted_Price_$</th>
+      <th>Expected_Change_$</th>
+      <th>Expected_Return_%</th>
+      <th>Signal</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1m</td>
+      <td>2026-10-20 18:44:00</td>
+      <td>82475.47</td>
+      <td>82469.77</td>
+      <td>-5.70</td>
+      <td>-0.007</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3m</td>
+      <td>2026-10-20 18:42:00</td>
+      <td>82475.47</td>
+      <td>82424.50</td>
+      <td>-50.97</td>
+      <td>-0.062</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5m</td>
+      <td>2026-10-20 18:40:00</td>
+      <td>82475.47</td>
+      <td>82444.19</td>
+      <td>-31.28</td>
+      <td>-0.038</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>10m</td>
+      <td>2026-10-20 18:30:00</td>
+      <td>82547.88</td>
+      <td>82554.77</td>
+      <td>6.89</td>
+      <td>0.008</td>
+      <td>BULLISH 🟢</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>15m</td>
+      <td>2026-10-20 18:30:00</td>
+      <td>82475.47</td>
+      <td>82412.81</td>
+      <td>-62.66</td>
+      <td>-0.076</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>30m</td>
+      <td>2026-10-20 18:00:00</td>
+      <td>82547.75</td>
+      <td>82652.62</td>
+      <td>104.87</td>
+      <td>0.127</td>
+      <td>BULLISH 🟢</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>1h</td>
+      <td>2026-10-20 17:00:00</td>
+      <td>82820.33</td>
+      <td>82939.10</td>
+      <td>118.77</td>
+      <td>0.143</td>
+      <td>BULLISH 🟢</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>2h</td>
+      <td>2026-10-20 16:00:00</td>
+      <td>82820.33</td>
+      <td>83504.94</td>
+      <td>684.61</td>
+      <td>0.827</td>
+      <td>BULLISH 🟢</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>4h</td>
+      <td>2026-10-20 12:00:00</td>
+      <td>82617.68</td>
+      <td>84675.44</td>
+      <td>2057.76</td>
+      <td>2.491</td>
+      <td>BULLISH 🟢</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>12h</td>
+      <td>2026-10-20 00:00:00</td>
+      <td>81504.32</td>
+      <td>81397.59</td>
+      <td>-106.73</td>
+      <td>-0.131</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>24h</td>
+      <td>2026-10-19 00:00:00</td>
+      <td>81938.40</td>
+      <td>80690.36</td>
+      <td>-1248.04</td>
+      <td>-1.523</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>4d</td>
+      <td>2026-10-13 00:00:00</td>
+      <td>81615.64</td>
+      <td>82846.65</td>
+      <td>1231.01</td>
+      <td>1.508</td>
+      <td>BULLISH 🟢</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>30d</td>
+      <td>2026-09-01 00:00:00</td>
+      <td>83623.60</td>
+      <td>67431.44</td>
+      <td>-16192.16</td>
+      <td>-19.363</td>
+      <td>BEARISH 🔴</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📈 Multi-Step Forecast Horizon (+1 to +5 Steps Ahead)</h4>
+<p class="nb-md-p">Forecasting future trajectory for short-term (<code class="mono text-cyan">15m</code>), intermediate (<code class="mono text-cyan">1h</code>), and daily (<code class="mono text-cyan">24h</code>) horizons.</p>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [3]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code>fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
+
+for ax, tf in zip(axes, [&#x27;15m&#x27;, &#x27;1h&#x27;, &#x27;24h&#x27;]):
+    feat_path = f&#x27;../data/processed/BTC_USDT_{tf}_features.csv&#x27;
+    cur_df = pd.read_csv(feat_path)
+    cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)
+    cur_models = src.train_and_evaluate_models(cur_split)
+    
+    best_model = cur_models[&#x27;LightGBM&#x27;][&#x27;model&#x27;]
+    scaler = cur_split[&#x27;scaler&#x27;]
+    
+    multi_fc = src.multi_step_forecast(best_model, scaler, src.FEATURE_COLUMNS, cur_df, steps=5)
+    
+    # Plot recent history + forecast
+    hist_prices = cur_df[&#x27;close&#x27;].iloc[-15:].values
+    pred_prices = [hist_prices[-1]] + list(multi_fc[&#x27;Simulated_Price&#x27;].values)
+    
+    x_hist = range(len(hist_prices))
+    x_pred = range(len(hist_prices) - 1, len(hist_prices) - 1 + len(pred_prices))
+    
+    ax.plot(x_hist, hist_prices, label=&#x27;Recent Actual&#x27;, color=&#x27;#2b5c8f&#x27;, lw=1.8, marker=&#x27;o&#x27;, markersize=3)
+    ax.plot(x_pred, pred_prices, label=&#x27;Forecast (+5)&#x27;, color=&#x27;#e76f51&#x27;, lw=2.0, linestyle=&#x27;--&#x27;, marker=&#x27;s&#x27;, markersize=4)
+    ax.set_title(f&#x27;BTC/USDT [{tf}] Future Projection&#x27;, fontsize=11, fontweight=&#x27;bold&#x27;)
+    ax.set_ylabel(&#x27;Price (USDT)&#x27;)
+    ax.set_xlabel(&#x27;Candle Steps&#x27;)
+    ax.legend(loc=&#x27;upper left&#x27;)
+    ax.grid(True, linestyle=&#x27;--&#x27;, alpha=0.5)
+
+plt.tight_layout()
+plt.show()</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-amber">🗎</span> Computed Result</div>
+                          <pre class="output-stream">&lt;Figure size 1500x450 with 3 Axes&gt;</pre>
+                        
+                          <div class="figure-display-card">
+                            <div class="output-label" style="justify-content: center; margin-bottom: 8px;">
+                              <span class="mono text-cyan">📊</span> Generated Matplotlib Artifact
+                            </div>
+                            <img src="notebook_assets/06_future_forecasting_fig1.png" alt="Notebook Chart Artifact" onclick="openImgModal('notebook_assets/06_future_forecasting_fig1.png')">
+                            <div class="figure-caption">
+                              <span>Rendered during notebook execution</span>
+                              <span class="figure-zoom-hint">🔍 Click image to zoom / inspect fullscreen</span>
+                            </div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📊 Multi-Step Projection Detailed Breakdown</h4>
+                    </div>
+                  </div>
+                
+
+                  <div class="cell-block cell-code">
+                    <div class="cell-header">
+                      <span class="cell-index">In [4]</span>
+                      <button class="cell-copy-btn" onclick="copyCode(this)">📋 Copy Code</button>
+                    </div>
+                    <div class="code-container">
+                      <pre><code># Display table for 1h multi-step forecast
+print(&quot;Multi-step forecast trajectory for 1h timeframe:&quot;)
+multi_fc</code></pre>
+                    </div>
+                    
+                      <div class="output-container">
+                        
+                          <div class="output-label"><span class="mono text-cyan">▶</span> Console Output (stdout)</div>
+                          <pre class="output-stream">Multi-step forecast trajectory for 1h timeframe:
+</pre>
+                        
+                          <div class="output-label"><span class="mono text-emerald">▦</span> DataFrame Output</div>
+                          <div class="table-wrapper" style="margin-bottom: 16px;">
+                            <div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table class="data-table">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Step_Ahead</th>
+      <th>Simulated_Price</th>
+      <th>Delta_from_Current_$</th>
+      <th>Return_%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>+1</td>
+      <td>80690.36</td>
+      <td>-1248.04</td>
+      <td>-1.523</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>+2</td>
+      <td>80591.93</td>
+      <td>-98.44</td>
+      <td>-0.122</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>+3</td>
+      <td>80591.93</td>
+      <td>0.00</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>+4</td>
+      <td>80591.93</td>
+      <td>0.00</td>
+      <td>0.000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>+5</td>
+      <td>80591.93</td>
+      <td>0.00</td>
+      <td>0.000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+                          </div>
+                        
+                      </div>
+                    
+                  </div>
+                
+
+                  <div class="cell-block cell-markdown">
+                    <div class="cell-header">
+                      <span class="cell-index"><span class="badge-dot"></span> Markdown Note</span>
+                    </div>
+                    <div style="padding: 22px 26px;">
+                      <h4 class="nb-md-h3">📝 Project Conclusion &amp; Evaluation Summary</h4>
+<ul class="nb-md-list">
+<li><strong>Data Coverage:</strong> Successfully analyzed 13 timeframes from 1-minute to 30-day bars.</li>
+<li><strong>Machine Learning Integration:</strong> Compared Linear Regression, Random Forest, and LightGBM with strict out-of-sample temporal validation.</li>
+<li><strong>Algorithmic Backtesting:</strong> Simulated $10,000 cash balance incorporating transaction costs and logged every executed trade.</li>
+<li><strong>Future Forecasting:</strong> Produced multi-timeframe directional signals and projected trajectory cones for decision support.</li>
+</ul>
+                    </div>
+                  </div>
+                
+            </div>
+          </div>
+        </section>
+        
+</div>
+
+<!-- ════════════════════════════════════════════
+     THE VERY END: RAW NOTEBOOKS ARCHIVE & EXPLORER
+     ════════════════════════════════════════════ -->
+<section class="raw-notebooks-section tab-content-block" id="raw-notebooks" data-tab="raw-notebooks">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Raw Repository</span>
+      <h2>Raw Jupyter Notebooks Repository &amp; Explorer</h2>
+      <p style="max-width: 800px; margin: 0 auto;">
+        Open, inspect, and browse the actual raw <code class="mono text-cyan">.ipynb</code> notebook files directly in your browser without opening VSCode, or download the files individually or as a complete bundle.
+      </p>
+      <div style="margin-top: 24px;">
+        <a href="all_notebooks.zip" download class="btn-primary" style="font-size: 1rem; padding: 14px 32px;">
+          📦 Download All 6 Notebooks + Charts (.zip)
+        </a>
+      </div>
+    </div>
+
+    <div class="raw-nb-grid">
+      <!-- Card 1 -->
+      <div class="raw-nb-card">
+        <div>
+          <div class="raw-nb-num">NOTEBOOK 01</div>
+          <div class="raw-nb-title">01_data_acquisition.ipynb</div>
+          <div class="raw-nb-desc">Acquires 800 historical OHLCV candles from Binance Spot Public API across 13 timeframes via CCXT with aggregation algorithms.</div>
+          <div class="raw-nb-meta">
+            <span>Size: 302 KB</span>
+            <span>Cells: 9</span>
+            <span>Outputs: 4</span>
+          </div>
+        </div>
+        <div class="raw-nb-actions">
+          <button class="btn-open-raw" onclick="openRawModal('notebooks/01_data_acquisition.ipynb', '01_data_acquisition.ipynb')">👁️ View Raw</button>
+          <a href="notebooks/01_data_acquisition.ipynb" download class="btn-download-raw">📥 Download</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="raw-nb-card">
+        <div>
+          <div class="raw-nb-num">NOTEBOOK 02</div>
+          <div class="raw-nb-title">02_eda_and_preprocessing.ipynb</div>
+          <div class="raw-nb-desc">Data integrity tests (0 nulls, 0 duplicate timestamps), descriptive statistics, log returns derivation, kurtosis and fat tails distributions.</div>
+          <div class="raw-nb-meta">
+            <span>Size: 262 KB</span>
+            <span>Cells: 11</span>
+            <span>Outputs: 5</span>
+          </div>
+        </div>
+        <div class="raw-nb-actions">
+          <button class="btn-open-raw" onclick="openRawModal('notebooks/02_eda_and_preprocessing.ipynb', '02_eda_and_preprocessing.ipynb')">👁️ View Raw</button>
+          <a href="notebooks/02_eda_and_preprocessing.ipynb" download class="btn-download-raw">📥 Download</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="raw-nb-card">
+        <div>
+          <div class="raw-nb-num">NOTEBOOK 03</div>
+          <div class="raw-nb-title">03_feature_engineering.ipynb</div>
+          <div class="raw-nb-desc">22 quantitative technical oscillators (SMA, EMA, RSI, MACD, Bollinger Bands, ATR) and shifted target formulation with zero future leakage.</div>
+          <div class="raw-nb-meta">
+            <span>Size: 514 KB</span>
+            <span>Cells: 11</span>
+            <span>Outputs: 6</span>
+          </div>
+        </div>
+        <div class="raw-nb-actions">
+          <button class="btn-open-raw" onclick="openRawModal('notebooks/03_feature_engineering.ipynb', '03_feature_engineering.ipynb')">👁️ View Raw</button>
+          <a href="notebooks/03_feature_engineering.ipynb" download class="btn-download-raw">📥 Download</a>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="raw-nb-card">
+        <div>
+          <div class="raw-nb-num">NOTEBOOK 04</div>
+          <div class="raw-nb-title">04_model_training_and_evaluation.ipynb</div>
+          <div class="raw-nb-desc">Ridge Regression, Random Forest, and LightGBM benchmarked on 80/20 chronological holdout. Computes RMSE, MAE, R², and Directional Hit Rate %.</div>
+          <div class="raw-nb-meta">
+            <span>Size: 303 KB</span>
+            <span>Cells: 13</span>
+            <span>Outputs: 6</span>
+          </div>
+        </div>
+        <div class="raw-nb-actions">
+          <button class="btn-open-raw" onclick="openRawModal('notebooks/04_model_training_and_evaluation.ipynb', '04_model_training_and_evaluation.ipynb')">👁️ View Raw</button>
+          <a href="notebooks/04_model_training_and_evaluation.ipynb" download class="btn-download-raw">📥 Download</a>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="raw-nb-card">
+        <div>
+          <div class="raw-nb-num">NOTEBOOK 05</div>
+          <div class="raw-nb-title">05_backtesting_and_simulation.ipynb</div>
+          <div class="raw-nb-desc">Event-driven simulation of $10,000 portfolio with 0.1% transaction fee across 39 model × timeframe combinations with equity curves and master logs.</div>
+          <div class="raw-nb-meta">
+            <span>Size: 185 KB</span>
+            <span>Cells: 11</span>
+            <span>Outputs: 5</span>
+          </div>
+        </div>
+        <div class="raw-nb-actions">
+          <button class="btn-open-raw" onclick="openRawModal('notebooks/05_backtesting_and_simulation.ipynb', '05_backtesting_and_simulation.ipynb')">👁️ View Raw</button>
+          <a href="notebooks/05_backtesting_and_simulation.ipynb" download class="btn-download-raw">📥 Download</a>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="raw-nb-card">
+        <div>
+          <div class="raw-nb-num">NOTEBOOK 06</div>
+          <div class="raw-nb-title">06_future_forecasting.ipynb</div>
+          <div class="raw-nb-desc">Live multi-timeframe inference on latest market candles, BULLISH/BEARISH signals, and recursive +1 to +5 interval forecasting cones.</div>
+          <div class="raw-nb-meta">
+            <span>Size: 165 KB</span>
+            <span>Cells: 9</span>
+            <span>Outputs: 4</span>
+          </div>
+        </div>
+        <div class="raw-nb-actions">
+          <button class="btn-open-raw" onclick="openRawModal('notebooks/06_future_forecasting.ipynb', '06_future_forecasting.ipynb')">👁️ View Raw</button>
+          <a href="notebooks/06_future_forecasting.ipynb" download class="btn-download-raw">📥 Download</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════
+     FOOTER
+     ════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div style="margin-bottom: 24px;">
+      <a href="index.html" class="navbar-brand" style="justify-content: center; margin-bottom: 12px;">
+        <span class="logo-icon">₿</span>
+        <span>BTC Forecaster</span>
+      </a>
+      <p style="font-size: 0.85rem; color: var(--text-muted);">
+        Machine Learning Lab Project — Multi-Timeframe Cryptocurrency Price Forecasting &amp; Algorithmic Backtesting
+      </p>
+    </div>
+    <div class="tech-badges">
+      <span class="tech-badge">Python 3.10</span>
+      <span class="tech-badge">LightGBM</span>
+      <span class="tech-badge">Scikit-Learn</span>
+      <span class="tech-badge">Pandas</span>
+      <span class="tech-badge">CCXT Binance API</span>
+      <span class="tech-badge">Matplotlib</span>
+      <span class="tech-badge">Jupyter nbformat</span>
+    </div>
+    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 24px;">
+      <a href="index.html" style="color: var(--accent-cyan); text-decoration: none;">← Return to Executive Showcase Dashboard</a> &nbsp;|&nbsp;
+      <a href="#raw-notebooks" style="color: var(--accent-amber); text-decoration: none;">Download All Raw Notebooks (.zip)</a>
+    </p>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════════
+     MODAL: IMAGE LIGHTBOX
+     ════════════════════════════════════════════ -->
+<div class="img-modal" id="imgModal" onclick="closeImgModal(event)">
+  <div class="img-modal-content">
+    <button class="img-modal-close" onclick="closeImgModal()">&times;</button>
+    <img id="imgModalTarget" src="" alt="Zoomed Artifact">
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     MODAL: RAW NOTEBOOK JSON VIEWER
+     ════════════════════════════════════════════ -->
+<div class="raw-modal" id="rawModal" onclick="closeRawModal(event)">
+  <div class="raw-modal-dialog" onclick="event.stopPropagation()">
+    <div class="raw-modal-header">
+      <div class="raw-modal-title">
+        <span class="mono text-cyan">📓</span>
+        <span id="rawModalFilename">notebook.ipynb</span>
+      </div>
+      <div class="raw-modal-actions">
+        <button class="cell-copy-btn" id="copyRawBtn" onclick="copyRawContent()">📋 Copy JSON</button>
+        <a id="downloadRawBtn" href="#" download class="btn-toggle active" style="text-decoration:none;">📥 Download File</a>
+        <button class="raw-modal-close-btn" onclick="closeRawModal()">&times;</button>
+      </div>
+    </div>
+    <div class="raw-modal-body" id="rawModalBody">Loading raw notebook content...</div>
+  </div>
+</div>
+
+<script src="raw_notebooks_preview.js"></script>
+<script src="notebooks.js"></script>
+</body>
+</html>

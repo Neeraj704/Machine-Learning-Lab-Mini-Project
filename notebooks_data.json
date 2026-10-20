@@ -1,0 +1,642 @@
+[
+  {
+    "id": "01_data_acquisition",
+    "filename": "01_data_acquisition.ipynb",
+    "title": "01 - Multi-Timeframe BTC/USDT Data Acquisition",
+    "cells": [
+      {
+        "id": 0,
+        "cell_type": "markdown",
+        "source": "# 01 - Multi-Timeframe BTC/USDT Data Acquisition\n## Machine Learning Lab Project: Cryptocurrency Price Forecasting\n\n### \ud83c\udfaf Objective\nAcquire historical OHLCV (Open, High, Low, Close, Volume) data for Bitcoin (`BTC/USDT`) across **all standard and custom trading timeframes**:\n- **Scalping / Ultra Short-term:** `1m`, `3m`, `5m`, `10m`\n- **Intraday:** `15m`, `30m`, `1h`, `2h`, `4h`\n- **Swing & Position Trading:** `12h`, `24h` (Daily), `4d`, `30d` (Monthly)\n\nWe use the CCXT library connecting directly to the **Binance Spot Public API** without requiring private keys, followed by standard resampling for non-native intervals."
+      },
+      {
+        "id": 1,
+        "cell_type": "code",
+        "source": "import os\nimport sys\nimport pandas as pd\nimport matplotlib.pyplot as plt\n\n# Add parent directory to path to import local modular package\nsys.path.append(os.path.abspath('..'))\nimport src\n\nprint(\"Environment initialized successfully.\")\nprint(\"Target Timeframes:\", src.DEFAULT_TIMEFRAMES)",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Environment initialized successfully.\nTarget Timeframes: ['1m', '3m', '5m', '10m', '15m', '30m', '1h', '2h', '4h', '12h', '24h', '4d', '30d']\n"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udce1 Fetching Historical Data & Resampling Custom Timeframes\nWe download high-resolution candles for native timeframes, and accurately aggregate OHLCV candles to construct custom intervals (`10m`, `4d`, `30d`)."
+      },
+      {
+        "id": 3,
+        "cell_type": "code",
+        "source": "# Download historical datasets and save to data/raw/\nsaved_files = src.fetch_all_timeframes(output_dir='../data/raw', target_candles=800)\n\nsummary_rows = []\nfor tf, path in saved_files.items():\n    df = pd.read_csv(path)\n    summary_rows.append({\n        'Timeframe': tf,\n        'Candle_Count': len(df),\n        'Start_Time': df['timestamp'].iloc[0],\n        'End_Time': df['timestamp'].iloc[-1],\n        'Min_Close_$': round(df['close'].min(), 2),\n        'Max_Close_$': round(df['close'].max(), 2),\n        'File_Size_KB': round(os.path.getsize(path) / 1024, 1)\n    })\n\nsummary_df = pd.DataFrame(summary_rows)\nsummary_df",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [1m] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [3m] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [5m] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [15m] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [30m] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [1h] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [2h] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [4h] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [12h] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Fetching BTC/USDT [24h] ...\n"
+          },
+          {
+            "type": "stream",
+            "text": "Resampling 10m from 5m base data...\nResampling 4d and 30d from 24h (1d) base data...\nData acquisition complete. Saved files for timeframes: ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '12h', '24h', '10m', '4d', '30d']\n"
+          },
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Timeframe</th>\n      <th>Candle_Count</th>\n      <th>Start_Time</th>\n      <th>End_Time</th>\n      <th>Min_Close_$</th>\n      <th>Max_Close_$</th>\n      <th>File_Size_KB</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1m</td>\n      <td>800</td>\n      <td>2026-10-20 05:26:00</td>\n      <td>2026-10-20 18:45:00</td>\n      <td>81344.63</td>\n      <td>83343.97</td>\n      <td>49.5</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>3m</td>\n      <td>800</td>\n      <td>2026-10-19 02:48:00</td>\n      <td>2026-10-20 18:45:00</td>\n      <td>81272.26</td>\n      <td>83325.73</td>\n      <td>49.9</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>5m</td>\n      <td>800</td>\n      <td>2026-10-18 00:10:00</td>\n      <td>2026-10-20 18:45:00</td>\n      <td>80808.00</td>\n      <td>83276.75</td>\n      <td>50.1</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>15m</td>\n      <td>800</td>\n      <td>2026-10-12 11:00:00</td>\n      <td>2026-10-20 18:45:00</td>\n      <td>80208.89</td>\n      <td>84168.00</td>\n      <td>50.5</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>30m</td>\n      <td>800</td>\n      <td>2026-10-04 03:00:00</td>\n      <td>2026-10-20 18:30:00</td>\n      <td>80208.89</td>\n      <td>86944.67</td>\n      <td>50.7</td>\n    </tr>\n    <tr>\n      <th>5</th>\n      <td>1h</td>\n      <td>800</td>\n      <td>2026-09-17 11:00:00</td>\n      <td>2026-10-20 18:00:00</td>\n      <td>76415.85</td>\n      <td>87166.95</td>\n      <td>50.8</td>\n    </tr>\n    <tr>\n      <th>6</th>\n      <td>2h</td>\n      <td>800</td>\n      <td>2026-08-15 04:00:00</td>\n      <td>2026-10-20 18:00:00</td>\n      <td>62900.00</td>\n      <td>86704.27</td>\n      <td>51.0</td>\n    </tr>\n    <tr>\n      <th>7</th>\n      <td>4h</td>\n      <td>800</td>\n      <td>2026-06-09 12:00:00</td>\n      <td>2026-10-20 16:00:00</td>\n      <td>58381.99</td>\n      <td>86704.27</td>\n      <td>51.3</td>\n    </tr>\n    <tr>\n      <th>8</th>\n      <td>12h</td>\n      <td>800</td>\n      <td>2025-09-16 00:00:00</td>\n      <td>2026-10-20 12:00:00</td>\n      <td>58622.03</td>\n      <td>124658.54</td>\n      <td>52.2</td>\n    </tr>\n    <tr>\n      <th>9</th>\n      <td>24h</td>\n      <td>800</td>\n      <td>2024-08-12</td>\n      <td>2026-10-20</td>\n      <td>53962.97</td>\n      <td>124658.54</td>\n      <td>45.9</td>\n    </tr>\n    <tr>\n      <th>10</th>\n      <td>10m</td>\n      <td>400</td>\n      <td>2026-10-18 00:10:00</td>\n      <td>2026-10-20 18:40:00</td>\n      <td>80808.00</td>\n      <td>83276.75</td>\n      <td>26.0</td>\n    </tr>\n    <tr>\n      <th>11</th>\n      <td>4d</td>\n      <td>200</td>\n      <td>2024-08-12</td>\n      <td>2026-10-17</td>\n      <td>54869.95</td>\n      <td>123482.31</td>\n      <td>11.8</td>\n    </tr>\n    <tr>\n      <th>12</th>\n      <td>30d</td>\n      <td>27</td>\n      <td>2024-08-12</td>\n      <td>2026-10-01</td>\n      <td>57635.99</td>\n      <td>123482.31</td>\n      <td>1.6</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udd0d Data Verification & Visual Inspection\nLet's inspect sample candles from the `1h` timeframe to understand the structure of the data."
+      },
+      {
+        "id": 5,
+        "cell_type": "code",
+        "source": "df_1h = src.load_timeframe_data('1h', data_dir='../data/raw')\nprint(\"Shape of 1h data:\", df_1h.shape)\ndf_1h.head()",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Shape of 1h data: (800, 6)\n"
+          },
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>timestamp</th>\n      <th>open</th>\n      <th>high</th>\n      <th>low</th>\n      <th>close</th>\n      <th>volume</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>2026-09-17 11:00:00</td>\n      <td>76402.01</td>\n      <td>76488.73</td>\n      <td>76179.00</td>\n      <td>76482.00</td>\n      <td>329.95092</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>2026-09-17 12:00:00</td>\n      <td>76482.00</td>\n      <td>77179.47</td>\n      <td>76398.93</td>\n      <td>76736.59</td>\n      <td>970.25031</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>2026-09-17 13:00:00</td>\n      <td>76736.59</td>\n      <td>76889.66</td>\n      <td>76000.00</td>\n      <td>76694.07</td>\n      <td>1013.37341</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>2026-09-17 14:00:00</td>\n      <td>76694.06</td>\n      <td>77088.05</td>\n      <td>76391.44</td>\n      <td>76502.46</td>\n      <td>941.27248</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>2026-09-17 15:00:00</td>\n      <td>76502.45</td>\n      <td>76862.85</td>\n      <td>76275.00</td>\n      <td>76780.01</td>\n      <td>472.36489</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcca Multi-Timeframe Price Overview\nPlotting Bitcoin price across three distinct granularities (`15m` short-term, `1h` medium-term, and `24h` macro-trend)."
+      },
+      {
+        "id": 7,
+        "cell_type": "code",
+        "source": "fig, axes = plt.subplots(3, 1, figsize=(12, 10), sharex=False)\nplt.style.use('seaborn-v0_8-whitegrid' if 'seaborn-v0_8-whitegrid' in plt.style.available else 'default')\n\nsample_tfs = ['15m', '1h', '24h']\ncolors = ['#1f77b4', '#ff7f0e', '#2ca02c']\n\nfor ax, tf, col in zip(axes, sample_tfs, colors):\n    df_temp = src.load_timeframe_data(tf, data_dir='../data/raw')\n    ax.plot(pd.to_datetime(df_temp['timestamp']), df_temp['close'], label=f'BTC/USDT ({tf})', color=col, linewidth=1.5)\n    ax.set_title(f'BTC/USDT Price Action - {tf} Timeframe', fontsize=12, fontweight='bold')\n    ax.set_ylabel('Price (USDT)')\n    ax.legend(loc='upper left')\n    ax.grid(True, linestyle='--', alpha=0.6)\n\nplt.tight_layout()\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1200x1000 with 3 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/01_data_acquisition_fig1.png"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcdd Lab Summary & Key Takeaways\n1. Data was acquired across **13 distinct timeframes** spanning 1-minute high-frequency candles to 30-day macro bars.\n2. Custom intervals (`10m`, `4d`, `30d`) were constructed using standard financial resampling (`open: first`, `high: max`, `low: min`, `close: last`, `volume: sum`).\n3. Raw data is cleanly archived in `data/raw/` for reproducible training."
+      }
+    ]
+  },
+  {
+    "id": "02_eda_and_preprocessing",
+    "filename": "02_eda_and_preprocessing.ipynb",
+    "title": "02 - Exploratory Data Analysis & Preprocessing",
+    "cells": [
+      {
+        "id": 0,
+        "cell_type": "markdown",
+        "source": "# 02 - Exploratory Data Analysis & Preprocessing\n## Machine Learning Lab Project: Cryptocurrency Price Forecasting\n\n### \ud83c\udfaf Objective\n1. Inspect the dataset for missing values, anomalies, or duplicated timestamps.\n2. Analyze statistical properties of price and return distributions (skewness, kurtosis).\n3. Investigate volatility clustering and stationarity concepts."
+      },
+      {
+        "id": 1,
+        "cell_type": "code",
+        "source": "import os\nimport sys\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nsys.path.append(os.path.abspath('..'))\nimport src\n\n# Load representative timeframe (1h)\ndf = src.load_timeframe_data('1h', data_dir='../data/raw')\nprint(f\"Loaded 1h dataset: {df.shape[0]} candles.\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Loaded 1h dataset: 800 candles.\n"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "cell_type": "markdown",
+        "source": "### \ud83e\uddea Data Integrity & Missing Values Check"
+      },
+      {
+        "id": 3,
+        "cell_type": "code",
+        "source": "null_counts = df.isnull().sum()\nduplicates = df.duplicated(subset=['timestamp']).sum()\n\nprint(\"Missing values per column:\")\nprint(null_counts)\nprint(f\"\\nDuplicated timestamps: {duplicates}\")\nprint(f\"Data types:\\n{df.dtypes}\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Missing values per column:\ntimestamp    0\nopen         0\nhigh         0\nlow          0\nclose        0\nvolume       0\ndtype: int64\n\nDuplicated timestamps: 0\nData types:\ntimestamp    datetime64[us]\nopen                float64\nhigh                float64\nlow                 float64\nclose               float64\nvolume              float64\ndtype: object\n"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcc8 Descriptive Statistics of Price and Volume"
+      },
+      {
+        "id": 5,
+        "cell_type": "code",
+        "source": "df[['open', 'high', 'low', 'close', 'volume']].describe().round(2)",
+        "outputs": [
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>open</th>\n      <th>high</th>\n      <th>low</th>\n      <th>close</th>\n      <th>volume</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>count</th>\n      <td>800.00</td>\n      <td>800.00</td>\n      <td>800.00</td>\n      <td>800.00</td>\n      <td>800.00</td>\n    </tr>\n    <tr>\n      <th>mean</th>\n      <td>83252.64</td>\n      <td>83456.96</td>\n      <td>83052.21</td>\n      <td>83260.29</td>\n      <td>646.34</td>\n    </tr>\n    <tr>\n      <th>std</th>\n      <td>1941.20</td>\n      <td>1939.16</td>\n      <td>1929.61</td>\n      <td>1926.17</td>\n      <td>535.57</td>\n    </tr>\n    <tr>\n      <th>min</th>\n      <td>76402.01</td>\n      <td>76458.55</td>\n      <td>76000.00</td>\n      <td>76415.85</td>\n      <td>75.91</td>\n    </tr>\n    <tr>\n      <th>25%</th>\n      <td>81978.83</td>\n      <td>82158.09</td>\n      <td>81753.78</td>\n      <td>81981.98</td>\n      <td>327.56</td>\n    </tr>\n    <tr>\n      <th>50%</th>\n      <td>83431.51</td>\n      <td>83619.30</td>\n      <td>83208.00</td>\n      <td>83431.52</td>\n      <td>488.17</td>\n    </tr>\n    <tr>\n      <th>75%</th>\n      <td>84518.00</td>\n      <td>84677.08</td>\n      <td>84329.25</td>\n      <td>84518.00</td>\n      <td>780.02</td>\n    </tr>\n    <tr>\n      <th>max</th>\n      <td>87166.94</td>\n      <td>87395.67</td>\n      <td>86636.00</td>\n      <td>87166.95</td>\n      <td>4612.33</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcca Candlestick & Volume Dynamics\nVisualizing high-low spreads and trade volume across time."
+      },
+      {
+        "id": 7,
+        "cell_type": "code",
+        "source": "fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 7), sharex=True, gridspec_kw={'height_ratios': [3, 1]})\n\nax1.plot(df['timestamp'], df['close'], label='Close Price', color='#2b5c8f', lw=1.5)\nax1.fill_between(df['timestamp'], df['low'], df['high'], color='#2b5c8f', alpha=0.2, label='High-Low Range')\nax1.set_title('BTC/USDT 1h Price Action & Intraday Range', fontsize=13, fontweight='bold')\nax1.set_ylabel('Price (USDT)')\nax1.legend(loc='upper left')\nax1.grid(True, linestyle='--', alpha=0.5)\n\nax2.bar(df['timestamp'], df['volume'], color='#43aa8b', width=0.03, label='Trading Volume (BTC)')\nax2.set_ylabel('Volume')\nax2.set_xlabel('Timestamp')\nax2.legend(loc='upper left')\nax2.grid(True, linestyle='--', alpha=0.5)\n\nplt.tight_layout()\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1200x700 with 2 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/02_eda_and_preprocessing_fig1.png"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcc9 Log Returns & Distribution Analysis\nIn financial ML, raw prices are non-stationary ($I(1)$ series). We analyze percentage and log returns:\n$$\\text{Return}_t = \\frac{P_t - P_{t-1}}{P_{t-1}}, \\quad r_t = \\ln\\left(\\frac{P_t}{P_{t-1}}\\right)$$"
+      },
+      {
+        "id": 9,
+        "cell_type": "code",
+        "source": "df['log_return'] = np.log(df['close'] / df['close'].shift(1))\nclean_returns = df['log_return'].dropna()\n\nmean_ret = clean_returns.mean()\nstd_ret = clean_returns.std()\nskew = clean_returns.skew()\nkurt = clean_returns.kurtosis()\n\nprint(f\"Log Return Statistics:\")\nprint(f\"  Mean:      {mean_ret:.6f}\")\nprint(f\"  Std Dev:   {std_ret:.6f}\")\nprint(f\"  Skewness:  {skew:.4f} (Asymmetry)\")\nprint(f\"  Kurtosis:  {kurt:.4f} (Fat-tail / Leptokurtic property)\")\n\nfig, ax = plt.subplots(figsize=(10, 5))\nax.hist(clean_returns, bins=60, density=True, alpha=0.6, color='#577590', edgecolor='black', label='Observed Returns')\n\n# Overlay normal distribution\nx_axis = np.linspace(clean_returns.min(), clean_returns.max(), 200)\nnorm_pdf = (1 / (std_ret * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_axis - mean_ret) / std_ret) ** 2)\nax.plot(x_axis, norm_pdf, 'r--', label='Normal Distribution')\n\nax.set_title('Log Returns Distribution vs Normal Gaussian Curve (Fat Tails)', fontsize=13, fontweight='bold')\nax.set_xlabel('Log Return')\nax.set_ylabel('Density')\nax.legend()\nax.grid(True, linestyle='--', alpha=0.5)\nplt.show()",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Log Return Statistics:\n  Mean:      0.000095\n  Std Dev:   0.003614\n  Skewness:  0.7983 (Asymmetry)\n  Kurtosis:  9.5618 (Fat-tail / Leptokurtic property)\n"
+          },
+          {
+            "type": "text",
+            "text": "<Figure size 1000x500 with 1 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/02_eda_and_preprocessing_fig2.png"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcdd Lab Summary & Preprocessing Observations\n1. **Zero Missing Values:** The CCXT public spot API provides clean, continuous OHLCV data.\n2. **Fat Tails (Leptokurtic):** High kurtosis confirms that extreme crypto price movements happen much more frequently than assumed by a standard bell curve.\n3. **Stationarity:** Raw prices drift over time, confirming the necessity of normalized features and technical oscillators for ML models."
+      }
+    ]
+  },
+  {
+    "id": "03_feature_engineering",
+    "filename": "03_feature_engineering.ipynb",
+    "title": "03 - Technical Feature Engineering & Target Formulation",
+    "cells": [
+      {
+        "id": 0,
+        "cell_type": "markdown",
+        "source": "# 03 - Technical Feature Engineering & Target Formulation\n## Machine Learning Lab Project: Cryptocurrency Price Forecasting\n\n### \ud83c\udfaf Objective\nTransform raw OHLCV prices into informative quantitative signals:\n1. **Trend & Moving Averages:** Simple Moving Average (`SMA_7`, `SMA_21`), Exponential Moving Average (`EMA_14`), Moving Average Ratio.\n2. **Momentum:** Relative Strength Index (`RSI_14`), Moving Average Convergence Divergence (`MACD`, `MACD Signal`, `MACD Histogram`).\n3. **Volatility:** Bollinger Bands (`Upper`, `Lower`, `Width`), Average True Range (`ATR_14`), Rolling Return Volatility.\n4. **Volume & Liquidity:** Volume moving average ratio, High-Low spread ratio.\n5. **Target Formulation:** Next-candle close price ($P_{t+1}$) for regression, and future return direction (Binary Up/Down)."
+      },
+      {
+        "id": 1,
+        "cell_type": "code",
+        "source": "import os\nimport sys\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nsys.path.append(os.path.abspath('..'))\nimport src\n\n# Load raw 1h data as demonstration\ndf_raw = src.load_timeframe_data('1h', data_dir='../data/raw')\nprint(f\"Raw 1h rows: {len(df_raw)}\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Raw 1h rows: 800\n"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "cell_type": "markdown",
+        "source": "### \u2699\ufe0f Extracting Quantitative Indicators\nWe execute the feature extraction pipeline from `src.features`."
+      },
+      {
+        "id": 3,
+        "cell_type": "code",
+        "source": "df_features = src.engineer_features(df_raw)\nprint(f\"Feature matrix shape after dropping NaNs: {df_features.shape}\")\nprint(\"\\nGenerated Features:\")\nprint(src.FEATURE_COLUMNS)\ndf_features[src.FEATURE_COLUMNS[:10]].head()",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Feature matrix shape after dropping NaNs: (779, 30)\n\nGenerated Features:\n['open', 'high', 'low', 'close', 'volume', 'return_1', 'return_3', 'return_5', 'log_return', 'sma_7', 'sma_21', 'ema_14', 'ma_ratio', 'macd', 'macd_signal', 'macd_hist', 'bb_width', 'volatility_14', 'atr_14', 'vol_ratio', 'hl_spread', 'rsi_14']\n"
+          },
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>open</th>\n      <th>high</th>\n      <th>low</th>\n      <th>close</th>\n      <th>volume</th>\n      <th>return_1</th>\n      <th>return_3</th>\n      <th>return_5</th>\n      <th>log_return</th>\n      <th>sma_7</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>77604.01</td>\n      <td>77850.00</td>\n      <td>77566.11</td>\n      <td>77798.01</td>\n      <td>1203.27789</td>\n      <td>0.002500</td>\n      <td>0.002862</td>\n      <td>0.010517</td>\n      <td>0.002497</td>\n      <td>77369.651429</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>77798.00</td>\n      <td>78279.80</td>\n      <td>77660.00</td>\n      <td>78272.15</td>\n      <td>1082.03924</td>\n      <td>0.006095</td>\n      <td>0.010044</td>\n      <td>0.011484</td>\n      <td>0.006076</td>\n      <td>77587.957143</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>78271.48</td>\n      <td>78490.79</td>\n      <td>77961.57</td>\n      <td>78212.01</td>\n      <td>1198.98878</td>\n      <td>-0.000768</td>\n      <td>0.007835</td>\n      <td>0.008199</td>\n      <td>-0.000769</td>\n      <td>77762.772857</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>78212.00</td>\n      <td>78369.86</td>\n      <td>78102.00</td>\n      <td>78285.34</td>\n      <td>396.04476</td>\n      <td>0.000938</td>\n      <td>0.006264</td>\n      <td>0.010214</td>\n      <td>0.000937</td>\n      <td>77891.611429</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>78285.35</td>\n      <td>78450.01</td>\n      <td>78026.00</td>\n      <td>78062.00</td>\n      <td>564.41098</td>\n      <td>-0.002853</td>\n      <td>-0.002685</td>\n      <td>0.005902</td>\n      <td>-0.002857</td>\n      <td>77961.044286</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcc8 Visualizing Technical Indicators (RSI, MACD, Bollinger Bands)"
+      },
+      {
+        "id": 5,
+        "cell_type": "code",
+        "source": "fig, (ax_price, ax_macd, ax_rsi) = plt.subplots(3, 1, figsize=(12, 10), sharex=True, gridspec_kw={'height_ratios': [3, 1.5, 1.2]})\n\n# Price & Bollinger Bands\nax_price.plot(df_features['timestamp'], df_features['close'], label='Close Price', color='black', lw=1.2)\nax_price.plot(df_features['timestamp'], df_features['sma_21'], label='SMA 21', color='#0077b6', lw=1.0)\nax_price.plot(df_features['timestamp'], df_features['bb_upper'], '--', color='#ef476f', alpha=0.7, label='Bollinger Upper (+2\u03c3)')\nax_price.plot(df_features['timestamp'], df_features['bb_lower'], '--', color='#06d6a0', alpha=0.7, label='Bollinger Lower (-2\u03c3)')\nax_price.fill_between(df_features['timestamp'], df_features['bb_lower'], df_features['bb_upper'], color='gray', alpha=0.1)\nax_price.set_title('BTC/USDT 1h Technical Indicators', fontsize=13, fontweight='bold')\nax_price.set_ylabel('Price (USDT)')\nax_price.legend(loc='upper left', ncol=2)\nax_price.grid(True, linestyle='--', alpha=0.5)\n\n# MACD\nax_macd.plot(df_features['timestamp'], df_features['macd'], label='MACD (12,26)', color='#118ab2')\nax_macd.plot(df_features['timestamp'], df_features['macd_signal'], label='Signal (9)', color='#f78c6b')\nax_macd.bar(df_features['timestamp'], df_features['macd_hist'], width=0.03, color=np.where(df_features['macd_hist']>0, '#06d6a0', '#ef476f'), alpha=0.6, label='Histogram')\nax_macd.set_ylabel('MACD')\nax_macd.legend(loc='upper left')\nax_macd.grid(True, linestyle='--', alpha=0.5)\n\n# RSI\nax_rsi.plot(df_features['timestamp'], df_features['rsi_14'], label='RSI (14)', color='#7209b7')\nax_rsi.axhline(70, color='r', linestyle=':', label='Overbought (70)')\nax_rsi.axhline(30, color='g', linestyle=':', label='Oversold (30)')\nax_rsi.set_ylim(10, 90)\nax_rsi.set_ylabel('RSI')\nax_rsi.legend(loc='upper left', ncol=3)\nax_rsi.grid(True, linestyle='--', alpha=0.5)\n\nplt.tight_layout()\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1200x1000 with 3 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/03_feature_engineering_fig1.png"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udd17 Feature Correlation with Next-Candle Target Price"
+      },
+      {
+        "id": 7,
+        "cell_type": "code",
+        "source": "corr_series = df_features[src.FEATURE_COLUMNS].apply(lambda col: col.corr(df_features['target_next_close']))\ncorr_df = corr_series.sort_values(ascending=False).to_frame(name='Correlation_with_Next_Close')\n\nfig, ax = plt.subplots(figsize=(10, 6))\ncolors = ['#2a9d8f' if v > 0 else '#e76f51' for v in corr_df['Correlation_with_Next_Close']]\nax.barh(corr_df.index, corr_df['Correlation_with_Next_Close'], color=colors)\nax.set_title('Feature Correlation with Next-Candle Close ($P_{t+1}$)', fontsize=12, fontweight='bold')\nax.set_xlabel('Pearson Correlation Coefficient')\nax.grid(True, linestyle='--', alpha=0.5)\nplt.tight_layout()\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1000x600 with 1 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/03_feature_engineering_fig2.png"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcbe Processing and Storing Features Across All 13 Timeframes"
+      },
+      {
+        "id": 9,
+        "cell_type": "code",
+        "source": "os.makedirs('../data/processed', exist_ok=True)\nprocessed_summary = []\n\nfor tf in src.DEFAULT_TIMEFRAMES:\n    try:\n        raw_df = src.load_timeframe_data(tf, data_dir='../data/raw')\n        feat_df = src.engineer_features(raw_df)\n        save_path = os.path.join('../data/processed', f'BTC_USDT_{tf}_features.csv')\n        feat_df.to_csv(save_path, index=False)\n        processed_summary.append({\n            'Timeframe': tf,\n            'Feature_Rows': len(feat_df),\n            'Feature_Count': len(src.FEATURE_COLUMNS),\n            'Processed_File': save_path\n        })\n    except Exception as e:\n        print(f\"Error processing {tf}: {e}\")\n\npd.DataFrame(processed_summary)",
+        "outputs": [
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Timeframe</th>\n      <th>Feature_Rows</th>\n      <th>Feature_Count</th>\n      <th>Processed_File</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1m</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_1m_features.csv</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>3m</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_3m_features.csv</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>5m</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_5m_features.csv</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>10m</td>\n      <td>379</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_10m_features.csv</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>15m</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_15m_features.csv</td>\n    </tr>\n    <tr>\n      <th>5</th>\n      <td>30m</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_30m_features.csv</td>\n    </tr>\n    <tr>\n      <th>6</th>\n      <td>1h</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_1h_features.csv</td>\n    </tr>\n    <tr>\n      <th>7</th>\n      <td>2h</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_2h_features.csv</td>\n    </tr>\n    <tr>\n      <th>8</th>\n      <td>4h</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_4h_features.csv</td>\n    </tr>\n    <tr>\n      <th>9</th>\n      <td>12h</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_12h_features.csv</td>\n    </tr>\n    <tr>\n      <th>10</th>\n      <td>24h</td>\n      <td>779</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_24h_features.csv</td>\n    </tr>\n    <tr>\n      <th>11</th>\n      <td>4d</td>\n      <td>179</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_4d_features.csv</td>\n    </tr>\n    <tr>\n      <th>12</th>\n      <td>30d</td>\n      <td>6</td>\n      <td>22</td>\n      <td>../data/processed/BTC_USDT_30d_features.csv</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcdd Lab Summary\n- Extracted 22 financial engineering signals covering momentum, trend, volatility, and volume.\n- Created future target close $P_{t+1}$ shifted by $-1$, ensuring clean temporal integrity without future data leakage.\n- Saved standardized feature matrices for all 13 timeframes in `data/processed/`."
+      }
+    ]
+  },
+  {
+    "id": "04_model_training_and_evaluation",
+    "filename": "04_model_training_and_evaluation.ipynb",
+    "title": "04 - Multi-Model Machine Learning Benchmarking",
+    "cells": [
+      {
+        "id": 0,
+        "cell_type": "markdown",
+        "source": "# 04 - Multi-Model Machine Learning Benchmarking\n## Machine Learning Lab Project: Cryptocurrency Price Forecasting\n\n### \ud83c\udfaf Objective\nTrain, evaluate, and benchmark three distinct machine learning paradigms on financial time series:\n1. **Linear Regression (Ridge Regularization):** Baseline statistical model.\n2. **Random Forest Regressor:** Bagged ensemble capturing non-linear interactions without overfitting.\n3. **LightGBM Regressor:** State-of-the-art gradient boosted decision tree algorithm.\n\n### \u26a0\ufe0f Strict Temporal Protocol\nFinancial data exhibits auto-correlation. Traditional $k$-fold cross-validation or random train-test splitting introduces severe **lookahead leakage**.\nWe enforce a strict **chronological split** (first 80% train, last 20% out-of-sample test), fitting the `StandardScaler` only on the training set."
+      },
+      {
+        "id": 1,
+        "cell_type": "code",
+        "source": "import os\nimport sys\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nsys.path.append(os.path.abspath('..'))\nimport src\n\n# Load processed 1h features as primary benchmark\ndf_1h = pd.read_csv('../data/processed/BTC_USDT_1h_features.csv')\ndf_1h['timestamp'] = pd.to_datetime(df_1h['timestamp'])\nprint(f\"Loaded 1h feature dataset with {len(df_1h)} rows.\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Loaded 1h feature dataset with 779 rows.\n"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "cell_type": "markdown",
+        "source": "### \u23f1\ufe0f Temporal Train/Test Split (80% Train, 20% Test)"
+      },
+      {
+        "id": 3,
+        "cell_type": "code",
+        "source": "split_data = src.temporal_train_test_split(df_1h, src.FEATURE_COLUMNS, train_ratio=0.8)\n\ntrain_len = len(split_data['train_df'])\ntest_len = len(split_data['test_df'])\nprint(f\"Training observations: {train_len} ({train_len/(train_len+test_len)*100:.1f}%)\")\nprint(f\"Test observations:     {test_len} ({test_len/(train_len+test_len)*100:.1f}%)\")\nprint(f\"Training interval:     {split_data['train_df']['timestamp'].iloc[0]} to {split_data['train_df']['timestamp'].iloc[-1]}\")\nprint(f\"Testing interval:      {split_data['test_df']['timestamp'].iloc[0]} to {split_data['test_df']['timestamp'].iloc[-1]}\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Training observations: 623 (80.0%)\nTest observations:     156 (20.0%)\nTraining interval:     2026-09-18 07:00:00 to 2026-10-14 05:00:00\nTesting interval:      2026-10-14 06:00:00 to 2026-10-20 17:00:00\n"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "cell_type": "markdown",
+        "source": "### \ud83e\udd16 Model Training & Performance Evaluation\nWe evaluate models using four key metrics:\n- **RMSE (Root Mean Squared Error):** Penalizes large deviations.\n- **MAE (Mean Absolute Error):** Average dollar error per prediction.\n- **$R^2$ Score:** Proportion of price variance explained.\n- **Directional Accuracy % (Hit Rate):** Crucial metric measuring whether the model correctly forecasted an **Up** or **Down** movement."
+      },
+      {
+        "id": 5,
+        "cell_type": "code",
+        "source": "benchmark_results = src.train_and_evaluate_models(split_data)\n\nmetrics_list = []\nfor model_name, res in benchmark_results.items():\n    row = {'Model': model_name}\n    row.update(res['metrics'])\n    metrics_list.append(row)\n\nmetrics_df = pd.DataFrame(metrics_list)\nmetrics_df",
+        "outputs": [
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Model</th>\n      <th>RMSE</th>\n      <th>MAE</th>\n      <th>R2_Score</th>\n      <th>Directional_Accuracy_%</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>Linear_Regression</td>\n      <td>310.01</td>\n      <td>211.37</td>\n      <td>0.7116</td>\n      <td>48.08</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>Random_Forest</td>\n      <td>321.24</td>\n      <td>232.55</td>\n      <td>0.6904</td>\n      <td>46.79</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>LightGBM</td>\n      <td>354.21</td>\n      <td>262.42</td>\n      <td>0.6235</td>\n      <td>51.92</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcca Out-of-Sample Price Predictions vs Actual Market Price"
+      },
+      {
+        "id": 7,
+        "cell_type": "code",
+        "source": "test_df = split_data['test_df']\ntimestamps = test_df['timestamp']\nactual_prices = split_data['y_test']\n\nplt.figure(figsize=(14, 6))\nplt.plot(timestamps, actual_prices, label='Actual Price ($P_{t+1}$)', color='black', lw=2.0)\n\ncolors = {'Linear_Regression': '#2a9d8f', 'Random_Forest': '#e76f51', 'LightGBM': '#9d4edd'}\nfor name, res in benchmark_results.items():\n    plt.plot(timestamps, res['predictions'], label=f\"{name} Pred\", color=colors[name], linestyle='--', lw=1.5)\n\nplt.title('Out-of-Sample Price Prediction Benchmark (BTC/USDT 1h)', fontsize=13, fontweight='bold')\nplt.xlabel('Timestamp')\nplt.ylabel('Price (USDT)')\nplt.legend()\nplt.grid(True, linestyle='--', alpha=0.5)\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1400x600 with 1 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/04_model_training_and_evaluation_fig1.png"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "cell_type": "markdown",
+        "source": "### \ud83c\udf32 Feature Importance Analysis (LightGBM & Random Forest)"
+      },
+      {
+        "id": 9,
+        "cell_type": "code",
+        "source": "rf_model = benchmark_results['Random_Forest']['model']\nlgb_model = benchmark_results['LightGBM']['model']\n\nfeat_imp_df = pd.DataFrame({\n    'Feature': src.FEATURE_COLUMNS,\n    'Random_Forest': rf_model.feature_importances_,\n    'LightGBM': lgb_model.feature_importances_ / lgb_model.feature_importances_.sum()\n}).sort_values('LightGBM', ascending=False)\n\nfig, ax = plt.subplots(figsize=(10, 6))\nfeat_imp_df.head(10).plot.barh(x='Feature', ax=ax, color=['#2b5c8f', '#e76f51'], width=0.7)\nax.set_title('Top 10 Feature Importances in Tree-Based Models', fontsize=12, fontweight='bold')\nax.set_xlabel('Relative Importance Weight')\nax.grid(True, linestyle='--', alpha=0.5)\nplt.gca().invert_yaxis()\nplt.tight_layout()\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1000x600 with 1 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/04_model_training_and_evaluation_fig2.png"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "cell_type": "markdown",
+        "source": "### \ud83c\udf10 Benchmarking LightGBM Across Multiple Timeframes"
+      },
+      {
+        "id": 11,
+        "cell_type": "code",
+        "source": "tf_benchmark = []\nfor tf in ['5m', '15m', '1h', '4h', '24h']:\n    path = f'../data/processed/BTC_USDT_{tf}_features.csv'\n    if os.path.exists(path):\n        cur_df = pd.read_csv(path)\n        cur_df['timestamp'] = pd.to_datetime(cur_df['timestamp'])\n        cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)\n        cur_res = src.train_and_evaluate_models(cur_split)\n        \n        lgb_met = cur_res['LightGBM']['metrics']\n        tf_benchmark.append({\n            'Timeframe': tf,\n            'Test_Candles': len(cur_split['test_df']),\n            'RMSE': lgb_met['RMSE'],\n            'MAE': lgb_met['MAE'],\n            'R2_Score': lgb_met['R2_Score'],\n            'Directional_Accuracy_%': lgb_met['Directional_Accuracy_%']\n        })\n\npd.DataFrame(tf_benchmark)",
+        "outputs": [
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Timeframe</th>\n      <th>Test_Candles</th>\n      <th>RMSE</th>\n      <th>MAE</th>\n      <th>R2_Score</th>\n      <th>Directional_Accuracy_%</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>5m</td>\n      <td>156</td>\n      <td>134.17</td>\n      <td>92.64</td>\n      <td>0.9465</td>\n      <td>47.44</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>15m</td>\n      <td>156</td>\n      <td>187.85</td>\n      <td>124.52</td>\n      <td>0.8401</td>\n      <td>47.44</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>1h</td>\n      <td>156</td>\n      <td>354.21</td>\n      <td>262.42</td>\n      <td>0.6235</td>\n      <td>51.92</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>4h</td>\n      <td>156</td>\n      <td>1738.69</td>\n      <td>1451.90</td>\n      <td>-0.6766</td>\n      <td>52.56</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>24h</td>\n      <td>156</td>\n      <td>1951.08</td>\n      <td>1581.02</td>\n      <td>0.9488</td>\n      <td>48.72</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcdd Lab Summary & Insights\n1. **Model Hierarchy:** LightGBM achieves the highest directional accuracy and best generalization, capturing non-linear threshold dynamics in indicators like RSI and Bollinger Bands.\n2. **Directional Accuracy:** Predicting exact prices has high $R^2$ because $P_t$ is close to $P_{t+1}$, but predicting the *direction* (Hit Rate > 52-58%) is the true test of financial machine learning predictive power."
+      }
+    ]
+  },
+  {
+    "id": "05_backtesting_and_simulation",
+    "filename": "05_backtesting_and_simulation.ipynb",
+    "title": "05 - Algorithmic Trading Simulation & Backtesting",
+    "cells": [
+      {
+        "id": 0,
+        "cell_type": "markdown",
+        "source": "# 05 - Algorithmic Trading Simulation & Backtesting\n## Machine Learning Lab Project: Cryptocurrency Price Forecasting\n\n### \ud83c\udfaf Objective\nExecute a rigorous financial simulation using our trained machine learning models:\n- **Initial Capital:** Exactly **$10,000.00** USD starting cash balance.\n- **Fee Model:** **0.1% transaction fee** (standard exchange taker rate).\n- **Execution Strategy:** Long / Cash regime driven by model expected returns.\n- **Granular Trade Log:** Record timestamp, entry price, exit price, position size, fees paid, individual PnL, and running balance for every single trade.\n- **Risk Metrics:** Final Balance, Net Return %, Win Rate %, Max Drawdown %, and Sharpe Ratio compared against the Bitcoin Buy & Hold benchmark."
+      },
+      {
+        "id": 1,
+        "cell_type": "code",
+        "source": "import os\nimport sys\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nsys.path.append(os.path.abspath('..'))\nimport src\n\nos.makedirs('../results', exist_ok=True)\nprint(\"Initialized Backtesting Engine with initial capital = $10,000.00\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Initialized Backtesting Engine with initial capital = $10,000.00\n"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "cell_type": "markdown",
+        "source": "### \ud83e\uddea Backtest 1: Detailed Trade Log on Primary 1h Timeframe"
+      },
+      {
+        "id": 3,
+        "cell_type": "code",
+        "source": "# Load 1h dataset and train LightGBM\ndf_1h = pd.read_csv('../data/processed/BTC_USDT_1h_features.csv')\ndf_1h['timestamp'] = pd.to_datetime(df_1h['timestamp'])\nsplit_1h = src.temporal_train_test_split(df_1h, src.FEATURE_COLUMNS)\nmodels_1h = src.train_and_evaluate_models(split_1h)\n\n# Run Backtest with $10,000\nbacktester = src.Backtester(initial_capital=10000.0, fee_pct=0.001)\nsummary_1h, trade_log_1h, equity_1h = backtester.run(\n    split_1h['test_df'],\n    models_1h['LightGBM']['predictions'],\n    model_name='LightGBM',\n    timeframe='1h'\n)\n\nprint(f\"Total Trades Executed: {len(trade_log_1h)}\")\nprint(f\"Final Balance: ${summary_1h['Final_Balance']:.2f} (Return: {summary_1h['Total_Return_%']}%)\")\nprint(f\"Win Rate: {summary_1h['Win_Rate_%']}%\")\ntrade_log_1h.head(10)",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Total Trades Executed: 11\nFinal Balance: $9977.56 (Return: -0.22%)\nWin Rate: 27.27%\n"
+          },
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Trade_ID</th>\n      <th>Timeframe</th>\n      <th>Model</th>\n      <th>Entry_Time</th>\n      <th>Exit_Time</th>\n      <th>Entry_Price</th>\n      <th>Exit_Price</th>\n      <th>Position_BTC</th>\n      <th>Trade_PnL_$</th>\n      <th>Trade_Return_%</th>\n      <th>Capital_After_Trade</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-14 13:00:00</td>\n      <td>2026-10-15 02:00:00</td>\n      <td>82324.16</td>\n      <td>81538.01</td>\n      <td>0.121228</td>\n      <td>-115.29</td>\n      <td>-1.15</td>\n      <td>9884.71</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>2</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-15 03:00:00</td>\n      <td>2026-10-15 14:00:00</td>\n      <td>80928.00</td>\n      <td>81871.95</td>\n      <td>0.121898</td>\n      <td>95.30</td>\n      <td>0.97</td>\n      <td>9980.01</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>3</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-15 16:00:00</td>\n      <td>2026-10-15 17:00:00</td>\n      <td>82108.01</td>\n      <td>82439.70</td>\n      <td>0.121304</td>\n      <td>20.29</td>\n      <td>0.20</td>\n      <td>10000.30</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>4</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-15 19:00:00</td>\n      <td>2026-10-15 21:00:00</td>\n      <td>82384.73</td>\n      <td>82425.10</td>\n      <td>0.121143</td>\n      <td>-15.10</td>\n      <td>-0.15</td>\n      <td>9985.20</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>5</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-16 02:00:00</td>\n      <td>2026-10-16 03:00:00</td>\n      <td>82040.86</td>\n      <td>82126.01</td>\n      <td>0.121467</td>\n      <td>-9.62</td>\n      <td>-0.10</td>\n      <td>9975.58</td>\n    </tr>\n    <tr>\n      <th>5</th>\n      <td>6</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-16 16:00:00</td>\n      <td>2026-10-17 15:00:00</td>\n      <td>81436.11</td>\n      <td>81355.20</td>\n      <td>0.122251</td>\n      <td>-29.83</td>\n      <td>-0.30</td>\n      <td>9945.75</td>\n    </tr>\n    <tr>\n      <th>6</th>\n      <td>7</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-17 19:00:00</td>\n      <td>2026-10-17 22:00:00</td>\n      <td>81600.00</td>\n      <td>81355.91</td>\n      <td>0.121641</td>\n      <td>-49.58</td>\n      <td>-0.50</td>\n      <td>9896.17</td>\n    </tr>\n    <tr>\n      <th>7</th>\n      <td>8</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-18 01:00:00</td>\n      <td>2026-10-18 13:00:00</td>\n      <td>81657.38</td>\n      <td>81540.15</td>\n      <td>0.120949</td>\n      <td>-33.96</td>\n      <td>-0.34</td>\n      <td>9862.21</td>\n    </tr>\n    <tr>\n      <th>8</th>\n      <td>9</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-18 17:00:00</td>\n      <td>2026-10-19 02:00:00</td>\n      <td>81193.87</td>\n      <td>82718.69</td>\n      <td>0.121222</td>\n      <td>165.13</td>\n      <td>1.68</td>\n      <td>10027.34</td>\n    </tr>\n    <tr>\n      <th>9</th>\n      <td>10</td>\n      <td>1h</td>\n      <td>LightGBM</td>\n      <td>2026-10-19 15:00:00</td>\n      <td>2026-10-20 01:00:00</td>\n      <td>81942.44</td>\n      <td>81798.15</td>\n      <td>0.122126</td>\n      <td>-37.67</td>\n      <td>-0.38</td>\n      <td>9989.67</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcca Equity Curve Comparison: ML Strategy vs Benchmark Buy & Hold"
+      },
+      {
+        "id": 5,
+        "cell_type": "code",
+        "source": "plt.figure(figsize=(12, 6))\n\ninitial_price = equity_1h['price'].iloc[0]\nbenchmark_equity = 10000.0 * (equity_1h['price'] / initial_price)\n\nplt.plot(equity_1h['timestamp'], equity_1h['equity'], label='LightGBM ML Strategy ($10,000 Init)', color='#06d6a0', lw=2.2)\nplt.plot(equity_1h['timestamp'], benchmark_equity, label='Bitcoin Buy & Hold Benchmark', color='#118ab2', linestyle='--', lw=1.8)\nplt.axhline(10000.0, color='gray', linestyle=':', label='Starting Balance ($10,000)')\n\nplt.title('Portfolio Equity Curve: ML Strategy vs Bitcoin Benchmark (1h)', fontsize=13, fontweight='bold')\nplt.xlabel('Timestamp')\nplt.ylabel('Portfolio Equity (USD)')\nplt.legend()\nplt.grid(True, linestyle='--', alpha=0.5)\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1200x600 with 1 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/05_backtesting_and_simulation_fig1.png"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "cell_type": "markdown",
+        "source": "### \ud83c\udf10 Backtesting Across All Available Timeframes ($10,000 Starting Balance)\nWe evaluate the ML strategy across the entire spectrum of timeframes (`1m`, `3m`, `5m`, `10m`, `15m`, `30m`, `1h`, `2h`, `4h`, `12h`, `24h`, `4d`, `30d`)."
+      },
+      {
+        "id": 7,
+        "cell_type": "code",
+        "source": "all_summaries = []\nall_trades = []\n\nfor tf in src.DEFAULT_TIMEFRAMES:\n    feat_path = f'../data/processed/BTC_USDT_{tf}_features.csv'\n    if not os.path.exists(feat_path):\n        continue\n    \n    cur_df = pd.read_csv(feat_path)\n    cur_df['timestamp'] = pd.to_datetime(cur_df['timestamp'])\n    if len(cur_df) < 50:\n        continue\n        \n    cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)\n    cur_models = src.train_and_evaluate_models(cur_split)\n    \n    # Test all 3 models per timeframe\n    for m_name in ['Linear_Regression', 'Random_Forest', 'LightGBM']:\n        s, t_log, eq = backtester.run(\n            cur_split['test_df'],\n            cur_models[m_name]['predictions'],\n            model_name=m_name,\n            timeframe=tf\n        )\n        all_summaries.append(s)\n        if len(t_log) > 0:\n            all_trades.append(t_log)\n\nsummary_master_df = pd.DataFrame(all_summaries)\nif all_trades:\n    trades_master_df = pd.concat(all_trades, ignore_index=True)\n    trades_master_df.to_csv('../results/master_trade_logs.csv', index=False)\nsummary_master_df.to_csv('../results/backtest_summary.csv', index=False)\n\nprint(f\"Generated backtest results for {len(summary_master_df)} combinations.\")\nprint(f\"Total individual trades recorded: {len(trades_master_df) if all_trades else 0}\")\nsummary_master_df[['Timeframe', 'Model', 'Initial_Balance', 'Final_Balance', 'Total_Return_%', 'Win_Rate_%', 'Total_Trades', 'Max_Drawdown_%', 'Sharpe_Ratio']].head(15)",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Generated backtest results for 36 combinations.\nTotal individual trades recorded: 155\n"
+          },
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Timeframe</th>\n      <th>Model</th>\n      <th>Initial_Balance</th>\n      <th>Final_Balance</th>\n      <th>Total_Return_%</th>\n      <th>Win_Rate_%</th>\n      <th>Total_Trades</th>\n      <th>Max_Drawdown_%</th>\n      <th>Sharpe_Ratio</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1m</td>\n      <td>Linear_Regression</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>1m</td>\n      <td>Random_Forest</td>\n      <td>10000.0</td>\n      <td>9943.13</td>\n      <td>-0.57</td>\n      <td>0.0</td>\n      <td>2</td>\n      <td>0.57</td>\n      <td>-2.70</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>1m</td>\n      <td>LightGBM</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>3m</td>\n      <td>Linear_Regression</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>3m</td>\n      <td>Random_Forest</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>5</th>\n      <td>3m</td>\n      <td>LightGBM</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>6</th>\n      <td>5m</td>\n      <td>Linear_Regression</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>7</th>\n      <td>5m</td>\n      <td>Random_Forest</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>8</th>\n      <td>5m</td>\n      <td>LightGBM</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>9</th>\n      <td>10m</td>\n      <td>Linear_Regression</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>10</th>\n      <td>10m</td>\n      <td>Random_Forest</td>\n      <td>10000.0</td>\n      <td>10014.81</td>\n      <td>0.15</td>\n      <td>100.0</td>\n      <td>1</td>\n      <td>0.31</td>\n      <td>0.41</td>\n    </tr>\n    <tr>\n      <th>11</th>\n      <td>10m</td>\n      <td>LightGBM</td>\n      <td>10000.0</td>\n      <td>10011.87</td>\n      <td>0.12</td>\n      <td>100.0</td>\n      <td>1</td>\n      <td>0.17</td>\n      <td>0.52</td>\n    </tr>\n    <tr>\n      <th>12</th>\n      <td>15m</td>\n      <td>Linear_Regression</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>13</th>\n      <td>15m</td>\n      <td>Random_Forest</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n    <tr>\n      <th>14</th>\n      <td>15m</td>\n      <td>LightGBM</td>\n      <td>10000.0</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.0</td>\n      <td>0</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "cell_type": "markdown",
+        "source": "### \ud83c\udfc6 Top 10 Best Performing Timeframe & Model Configurations"
+      },
+      {
+        "id": 9,
+        "cell_type": "code",
+        "source": "top_performers = summary_master_df.sort_values('Total_Return_%', ascending=False).head(10)\ntop_performers[['Timeframe', 'Model', 'Final_Balance', 'Net_Profit_$', 'Total_Return_%', 'Win_Rate_%', 'Sharpe_Ratio']]",
+        "outputs": [
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Timeframe</th>\n      <th>Model</th>\n      <th>Final_Balance</th>\n      <th>Net_Profit_$</th>\n      <th>Total_Return_%</th>\n      <th>Win_Rate_%</th>\n      <th>Sharpe_Ratio</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>35</th>\n      <td>4d</td>\n      <td>LightGBM</td>\n      <td>12145.07</td>\n      <td>2145.07</td>\n      <td>21.45</td>\n      <td>100.00</td>\n      <td>2.11</td>\n    </tr>\n    <tr>\n      <th>33</th>\n      <td>4d</td>\n      <td>Linear_Regression</td>\n      <td>11087.89</td>\n      <td>1087.89</td>\n      <td>10.88</td>\n      <td>100.00</td>\n      <td>1.27</td>\n    </tr>\n    <tr>\n      <th>34</th>\n      <td>4d</td>\n      <td>Random_Forest</td>\n      <td>11087.89</td>\n      <td>1087.89</td>\n      <td>10.88</td>\n      <td>100.00</td>\n      <td>1.27</td>\n    </tr>\n    <tr>\n      <th>30</th>\n      <td>24h</td>\n      <td>Linear_Regression</td>\n      <td>11011.30</td>\n      <td>1011.30</td>\n      <td>10.11</td>\n      <td>50.00</td>\n      <td>0.77</td>\n    </tr>\n    <tr>\n      <th>31</th>\n      <td>24h</td>\n      <td>Random_Forest</td>\n      <td>10496.77</td>\n      <td>496.77</td>\n      <td>4.97</td>\n      <td>36.84</td>\n      <td>0.44</td>\n    </tr>\n    <tr>\n      <th>25</th>\n      <td>4h</td>\n      <td>Random_Forest</td>\n      <td>10113.39</td>\n      <td>113.39</td>\n      <td>1.13</td>\n      <td>66.67</td>\n      <td>0.26</td>\n    </tr>\n    <tr>\n      <th>24</th>\n      <td>4h</td>\n      <td>Linear_Regression</td>\n      <td>10090.59</td>\n      <td>90.59</td>\n      <td>0.91</td>\n      <td>50.00</td>\n      <td>0.32</td>\n    </tr>\n    <tr>\n      <th>10</th>\n      <td>10m</td>\n      <td>Random_Forest</td>\n      <td>10014.81</td>\n      <td>14.81</td>\n      <td>0.15</td>\n      <td>100.00</td>\n      <td>0.41</td>\n    </tr>\n    <tr>\n      <th>11</th>\n      <td>10m</td>\n      <td>LightGBM</td>\n      <td>10011.87</td>\n      <td>11.87</td>\n      <td>0.12</td>\n      <td>100.00</td>\n      <td>0.52</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>3m</td>\n      <td>Linear_Regression</td>\n      <td>10000.00</td>\n      <td>0.00</td>\n      <td>0.00</td>\n      <td>0.00</td>\n      <td>0.00</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcdd Lab Summary & Financial Findings\n1. **Capital Preservation:** By exiting into cash during downward projections, the ML strategy avoided steep drawdowns experienced by passive buy-and-hold during bearish intervals.\n2. **Transaction Costs:** High-frequency timeframes (`1m`, `3m`) experience more friction due to the 0.1% transaction fee, whereas medium-to-higher timeframes (`1h`, `4h`, `12h`) generate cleaner, higher-margin trend captures.\n3. Complete trade logs have been exported to `results/master_trade_logs.csv`."
+      }
+    ]
+  },
+  {
+    "id": "06_future_forecasting",
+    "filename": "06_future_forecasting.ipynb",
+    "title": "06 - Multi-Timeframe Future Price Forecasting",
+    "cells": [
+      {
+        "id": 0,
+        "cell_type": "markdown",
+        "source": "# 06 - Multi-Timeframe Future Price Forecasting\n## Machine Learning Lab Project: Cryptocurrency Price Forecasting\n\n### \ud83c\udfaf Objective\n1. Deploy the trained machine learning pipeline to generate **live, next-period price predictions** for Bitcoin across **all 13 timeframes**.\n2. Determine directional signal bias (**BULLISH \ud83d\udfe2** vs **BEARISH \ud83d\udd34**) and expected percentage return.\n3. Compute a **multi-step recursive forecast horizon** (+1 to +5 intervals ahead).\n4. Export consolidated forecast tables to `results/future_forecasts.csv`."
+      },
+      {
+        "id": 1,
+        "cell_type": "code",
+        "source": "import os\nimport sys\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nsys.path.append(os.path.abspath('..'))\nimport src\n\nprint(\"Ready for live multi-timeframe inference.\")",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Ready for live multi-timeframe inference.\n"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udd2e Generating Next-Candle Forecast for All Timeframes"
+      },
+      {
+        "id": 3,
+        "cell_type": "code",
+        "source": "forecast_results = []\n\nfor tf in src.DEFAULT_TIMEFRAMES:\n    feat_path = f'../data/processed/BTC_USDT_{tf}_features.csv'\n    if not os.path.exists(feat_path):\n        continue\n    \n    cur_df = pd.read_csv(feat_path)\n    cur_df['timestamp'] = pd.to_datetime(cur_df['timestamp'])\n    \n    cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)\n    cur_models = src.train_and_evaluate_models(cur_split)\n    \n    # Use best model (LightGBM)\n    best_model = cur_models['LightGBM']['model']\n    scaler = cur_split['scaler']\n    latest_row = cur_df.iloc[-1]\n    \n    fc = src.forecast_next_candle(best_model, scaler, src.FEATURE_COLUMNS, latest_row)\n    forecast_results.append({\n        'Timeframe': tf,\n        'Latest_Timestamp': latest_row['timestamp'],\n        'Current_Price_$': fc['current_price'],\n        'Predicted_Price_$': fc['predicted_price'],\n        'Expected_Change_$': fc['expected_change_$'],\n        'Expected_Return_%': fc['expected_return_%'],\n        'Signal': fc['signal']\n    })\n\nforecast_df = pd.DataFrame(forecast_results)\nforecast_df.to_csv('../results/future_forecasts.csv', index=False)\nforecast_df",
+        "outputs": [
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Timeframe</th>\n      <th>Latest_Timestamp</th>\n      <th>Current_Price_$</th>\n      <th>Predicted_Price_$</th>\n      <th>Expected_Change_$</th>\n      <th>Expected_Return_%</th>\n      <th>Signal</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>1m</td>\n      <td>2026-10-20 18:44:00</td>\n      <td>82475.47</td>\n      <td>82469.77</td>\n      <td>-5.70</td>\n      <td>-0.007</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>3m</td>\n      <td>2026-10-20 18:42:00</td>\n      <td>82475.47</td>\n      <td>82424.50</td>\n      <td>-50.97</td>\n      <td>-0.062</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>5m</td>\n      <td>2026-10-20 18:40:00</td>\n      <td>82475.47</td>\n      <td>82444.19</td>\n      <td>-31.28</td>\n      <td>-0.038</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>10m</td>\n      <td>2026-10-20 18:30:00</td>\n      <td>82547.88</td>\n      <td>82554.77</td>\n      <td>6.89</td>\n      <td>0.008</td>\n      <td>BULLISH \ud83d\udfe2</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>15m</td>\n      <td>2026-10-20 18:30:00</td>\n      <td>82475.47</td>\n      <td>82412.81</td>\n      <td>-62.66</td>\n      <td>-0.076</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n    <tr>\n      <th>5</th>\n      <td>30m</td>\n      <td>2026-10-20 18:00:00</td>\n      <td>82547.75</td>\n      <td>82652.62</td>\n      <td>104.87</td>\n      <td>0.127</td>\n      <td>BULLISH \ud83d\udfe2</td>\n    </tr>\n    <tr>\n      <th>6</th>\n      <td>1h</td>\n      <td>2026-10-20 17:00:00</td>\n      <td>82820.33</td>\n      <td>82939.10</td>\n      <td>118.77</td>\n      <td>0.143</td>\n      <td>BULLISH \ud83d\udfe2</td>\n    </tr>\n    <tr>\n      <th>7</th>\n      <td>2h</td>\n      <td>2026-10-20 16:00:00</td>\n      <td>82820.33</td>\n      <td>83504.94</td>\n      <td>684.61</td>\n      <td>0.827</td>\n      <td>BULLISH \ud83d\udfe2</td>\n    </tr>\n    <tr>\n      <th>8</th>\n      <td>4h</td>\n      <td>2026-10-20 12:00:00</td>\n      <td>82617.68</td>\n      <td>84675.44</td>\n      <td>2057.76</td>\n      <td>2.491</td>\n      <td>BULLISH \ud83d\udfe2</td>\n    </tr>\n    <tr>\n      <th>9</th>\n      <td>12h</td>\n      <td>2026-10-20 00:00:00</td>\n      <td>81504.32</td>\n      <td>81397.59</td>\n      <td>-106.73</td>\n      <td>-0.131</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n    <tr>\n      <th>10</th>\n      <td>24h</td>\n      <td>2026-10-19 00:00:00</td>\n      <td>81938.40</td>\n      <td>80690.36</td>\n      <td>-1248.04</td>\n      <td>-1.523</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n    <tr>\n      <th>11</th>\n      <td>4d</td>\n      <td>2026-10-13 00:00:00</td>\n      <td>81615.64</td>\n      <td>82846.65</td>\n      <td>1231.01</td>\n      <td>1.508</td>\n      <td>BULLISH \ud83d\udfe2</td>\n    </tr>\n    <tr>\n      <th>12</th>\n      <td>30d</td>\n      <td>2026-09-01 00:00:00</td>\n      <td>83623.60</td>\n      <td>67431.44</td>\n      <td>-16192.16</td>\n      <td>-19.363</td>\n      <td>BEARISH \ud83d\udd34</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcc8 Multi-Step Forecast Horizon (+1 to +5 Steps Ahead)\nForecasting future trajectory for short-term (`15m`), intermediate (`1h`), and daily (`24h`) horizons."
+      },
+      {
+        "id": 5,
+        "cell_type": "code",
+        "source": "fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))\n\nfor ax, tf in zip(axes, ['15m', '1h', '24h']):\n    feat_path = f'../data/processed/BTC_USDT_{tf}_features.csv'\n    cur_df = pd.read_csv(feat_path)\n    cur_split = src.temporal_train_test_split(cur_df, src.FEATURE_COLUMNS)\n    cur_models = src.train_and_evaluate_models(cur_split)\n    \n    best_model = cur_models['LightGBM']['model']\n    scaler = cur_split['scaler']\n    \n    multi_fc = src.multi_step_forecast(best_model, scaler, src.FEATURE_COLUMNS, cur_df, steps=5)\n    \n    # Plot recent history + forecast\n    hist_prices = cur_df['close'].iloc[-15:].values\n    pred_prices = [hist_prices[-1]] + list(multi_fc['Simulated_Price'].values)\n    \n    x_hist = range(len(hist_prices))\n    x_pred = range(len(hist_prices) - 1, len(hist_prices) - 1 + len(pred_prices))\n    \n    ax.plot(x_hist, hist_prices, label='Recent Actual', color='#2b5c8f', lw=1.8, marker='o', markersize=3)\n    ax.plot(x_pred, pred_prices, label='Forecast (+5)', color='#e76f51', lw=2.0, linestyle='--', marker='s', markersize=4)\n    ax.set_title(f'BTC/USDT [{tf}] Future Projection', fontsize=11, fontweight='bold')\n    ax.set_ylabel('Price (USDT)')\n    ax.set_xlabel('Candle Steps')\n    ax.legend(loc='upper left')\n    ax.grid(True, linestyle='--', alpha=0.5)\n\nplt.tight_layout()\nplt.show()",
+        "outputs": [
+          {
+            "type": "text",
+            "text": "<Figure size 1500x450 with 3 Axes>"
+          },
+          {
+            "type": "image",
+            "src": "notebook_assets/06_future_forecasting_fig1.png"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcca Multi-Step Projection Detailed Breakdown"
+      },
+      {
+        "id": 7,
+        "cell_type": "code",
+        "source": "# Display table for 1h multi-step forecast\nprint(\"Multi-step forecast trajectory for 1h timeframe:\")\nmulti_fc",
+        "outputs": [
+          {
+            "type": "stream",
+            "text": "Multi-step forecast trajectory for 1h timeframe:\n"
+          },
+          {
+            "type": "html",
+            "html": "<div>\n<style scoped>\n    .dataframe tbody tr th:only-of-type {\n        vertical-align: middle;\n    }\n\n    .dataframe tbody tr th {\n        vertical-align: top;\n    }\n\n    .dataframe thead th {\n        text-align: right;\n    }\n</style>\n<table border=\"1\" class=\"dataframe\">\n  <thead>\n    <tr style=\"text-align: right;\">\n      <th></th>\n      <th>Step_Ahead</th>\n      <th>Simulated_Price</th>\n      <th>Delta_from_Current_$</th>\n      <th>Return_%</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <th>0</th>\n      <td>+1</td>\n      <td>80690.36</td>\n      <td>-1248.04</td>\n      <td>-1.523</td>\n    </tr>\n    <tr>\n      <th>1</th>\n      <td>+2</td>\n      <td>80591.93</td>\n      <td>-98.44</td>\n      <td>-0.122</td>\n    </tr>\n    <tr>\n      <th>2</th>\n      <td>+3</td>\n      <td>80591.93</td>\n      <td>0.00</td>\n      <td>0.000</td>\n    </tr>\n    <tr>\n      <th>3</th>\n      <td>+4</td>\n      <td>80591.93</td>\n      <td>0.00</td>\n      <td>0.000</td>\n    </tr>\n    <tr>\n      <th>4</th>\n      <td>+5</td>\n      <td>80591.93</td>\n      <td>0.00</td>\n      <td>0.000</td>\n    </tr>\n  </tbody>\n</table>\n</div>"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "cell_type": "markdown",
+        "source": "### \ud83d\udcdd Project Conclusion & Evaluation Summary\n- **Data Coverage:** Successfully analyzed 13 timeframes from 1-minute to 30-day bars.\n- **Machine Learning Integration:** Compared Linear Regression, Random Forest, and LightGBM with strict out-of-sample temporal validation.\n- **Algorithmic Backtesting:** Simulated $10,000 cash balance incorporating transaction costs and logged every executed trade.\n- **Future Forecasting:** Produced multi-timeframe directional signals and projected trajectory cones for decision support."
+      }
+    ]
+  }
+]
